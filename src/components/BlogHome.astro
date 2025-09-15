@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import ArticleList from "./ArticleList.astro";
+import { profileConfig } from "../config";
 
 const allPosts = await getCollection("blog", ({ data }) => {
   return !data.draft;
@@ -10,12 +11,7 @@ const recentPosts = visiblePosts
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 6);
 
-// 统计数据（只统计可见文章）
-const totalPosts = visiblePosts.length;
 const allTags = [...new Set(visiblePosts.flatMap((post) => post.data.tags))];
-const allCategories = [
-  ...new Set(visiblePosts.map((post) => post.data.category).filter(Boolean)),
-];
 
 // 热门标签
 const tagCounts = allTags.reduce(
@@ -28,30 +24,6 @@ const tagCounts = allTags.reduce(
   {} as Record<string, number>,
 );
 
-const popularTags = Object.entries(tagCounts)
-  .sort(([, a], [, b]) => b - a)
-  .slice(0, 15)
-  .map(([name, count]) => ({ name, count }));
-
-// 分类统计
-const categoryStats = allCategories.map((category) => ({
-  name: category,
-  count: allPosts.filter((post) => post.data.category === category).length,
-}));
-
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString("zh-CN", {
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const getTagSize = (count: number) => {
-  const maxCount = Math.max(...Object.values(tagCounts));
-  const minSize = 0.8;
-  const maxSize = 1.4;
-  return minSize + (maxSize - minSize) * (count / maxCount);
-};
 ---
 
 <div class="blog-home">
@@ -72,14 +44,26 @@ const getTagSize = (count: number) => {
 
       <!-- 社交链接 -->
       <div class="hero-social">
-        <a href="https://github.com" target="_blank" class="social-link">
-          <span class="social-icon">🐙</span>
-          GitHub
-        </a>
-        <a href="mailto:your-email@example.com" class="social-link">
-          <span class="social-icon">📧</span>
-          Email
-        </a>
+        {
+          profileConfig.socialLinks.map((link) => (
+            <a
+              href={link.url}
+              title={link.name}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="social-link"
+            >
+              <span class="social-icon">
+                {link.icon.startsWith('http') || link.icon.startsWith('/') ? (
+                  <img src={link.icon} alt={link.name} class="social-icon-img" />
+                ) : (
+                  link.icon
+                )}
+              </span>
+              {link.name}
+            </a>
+          ))
+        }
       </div>
     </div>
     <div class="hero-decoration">
@@ -225,6 +209,22 @@ const getTagSize = (count: number) => {
 
   .social-icon {
     font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .social-icon-img {
+    width: 1.1rem;
+    height: 1.1rem;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(0.4);
+    transition: var(--blog-transition);
+  }
+
+  .social-link:hover .social-icon-img {
+    filter: brightness(0) saturate(100%) invert(1);
+    transform: scale(1.1);
   }
 
   .hero-decoration {

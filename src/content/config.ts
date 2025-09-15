@@ -1,4 +1,5 @@
 import { defineCollection, z } from 'astro:content';
+import { profileConfig } from '/config';
 
 const blog = defineCollection({
   type: 'content',
@@ -10,7 +11,7 @@ const blog = defineCollection({
     heroImage: z.string().optional(),
     tags: z.array(z.string()).default([]),
     category: z.string().optional(),
-    author: z.string().default('作者'),
+    author: z.string().default(profileConfig.author),
 
     featured: z.boolean().default(false),
     // 支持从 Hugo 迁移过来的字段

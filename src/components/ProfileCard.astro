@@ -23,7 +23,13 @@ import { profileConfig } from "../config";
             rel="noopener noreferrer"
             class="social-link"
           >
-            <span class="social-icon">{link.icon}</span>
+            <span class="social-icon">
+              {link.icon.startsWith('http') || link.icon.startsWith('/') ? (
+                <img src={link.icon} alt={link.name} class="social-icon-img" />
+              ) : (
+                link.icon
+              )}
+            </span>
           </a>
         ))
       }
@@ -117,6 +123,22 @@ import { profileConfig } from "../config";
 
   .social-icon {
     font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .social-icon-img {
+    width: 1.2rem;
+    height: 1.2rem;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(0.4);
+    transition: var(--blog-transition);
+  }
+
+  .social-link:hover .social-icon-img {
+    filter: brightness(0) saturate(100%) invert(0.2);
+    transform: scale(1.1);
   }
 
   /* 响应式设计 */
@@ -145,6 +167,11 @@ import { profileConfig } from "../config";
 
     .social-icon {
       font-size: 1rem;
+    }
+
+    .social-icon-img {
+      width: 1rem;
+      height: 1rem;
     }
   }
 </style>

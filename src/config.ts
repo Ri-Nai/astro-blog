@@ -3,6 +3,7 @@ export interface ProfileConfig {
   avatar: string;
   name: string;
   bio: string;
+  author: string;
   socialLinks: {
     name: string;
     url: string;
@@ -28,18 +29,29 @@ export const siteConfig: SiteConfig = {
 
 export const profileConfig: ProfileConfig = {
   avatar: '/imgs/avatar.jpg',
-  name: '作者',
-  bio: '热爱技术，分享生活',
+  name: 'Reina',
+  bio: '如果努力的尽头是奇迹',
+  author: 'Reina',
   socialLinks: [
     {
       name: 'GitHub',
-      url: 'https://github.com/example',
-      icon: '🐙',
+      url: 'https://github.com/Ri-Nai',
+      icon: '/icons/github.svg',
     },
     {
       name: 'Email',
-      url: 'mailto:example@example.com',
-      icon: '📧',
+      url: 'mailto:Ri_Nai_@outlook.com',
+      icon: '/icons/email.svg',
+    },
+    {
+      name: 'Bilibili',
+      url: 'https://space.bilibili.com/4151993',
+      icon: '/icons/bilibili.svg',
+    },
+    {
+      name: 'Steam',
+      url: 'https://steamcommunity.com/id/Reina__/',
+      icon: '/icons/steam.svg',
     },
   ],
 };
