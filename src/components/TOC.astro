@@ -279,14 +279,15 @@ const tocTree = buildTocTree(headings);
 </style>
 
 <script>
-  // 添加滚动监听，高亮当前章节
+  // 添加滚动监听，高亮当前章节并自动滚动目录
   function initTOCScrollListener() {
     const tocLinks = document.querySelectorAll(".toc-link");
     const headings = document.querySelectorAll(
       ".prose h2, .prose h3, .prose h4, .prose h5, .prose h6",
     );
+    const tocContent = document.querySelector(".toc-content");
 
-    if (tocLinks.length === 0 || headings.length === 0) return;
+    if (tocLinks.length === 0 || headings.length === 0 || !tocContent) return;
 
     let ticking = false;
 
@@ -308,12 +309,29 @@ const tocTree = buildTocTree(headings);
           }
         });
 
+        let activeLink = null;
         tocLinks.forEach((link) => {
           link.classList.remove("active");
           if (link.getAttribute("href") === `#${current}`) {
             link.classList.add("active");
+            activeLink = link;
           }
         });
+
+        // 自动滚动目录，使当前选中的标题位于目录顶部
+        if (activeLink) {
+          const tocContentRect = tocContent.getBoundingClientRect();
+          const activeLinkRect = activeLink.getBoundingClientRect();
+          
+          // 计算需要滚动的距离
+          const scrollOffset = activeLinkRect.top - tocContentRect.top;
+          
+          // 平滑滚动到目标位置
+          tocContent.scrollTo({
+            top: tocContent.scrollTop + scrollOffset,
+            behavior: 'smooth'
+          });
+        }
 
         ticking = false;
       });
