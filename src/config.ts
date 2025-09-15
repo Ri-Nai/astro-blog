@@ -38,6 +38,18 @@ export interface NavigationConfig {
   };
 }
 
+export interface FriendConfig {
+  name: string;
+  url: string;
+  avatar: string;
+  description: string;
+  tags: string[];
+}
+
+export interface FriendsConfig {
+  friends: FriendConfig[];
+}
+
 
 
 export const profileConfig: ProfileConfig = {
@@ -77,6 +89,7 @@ export const navigationConfig: NavigationConfig = {
   navItems: [
     { href: '/', label: '首页', icon: '🏠' },
     { href: '/blog', label: '文章', icon: '📝' },
+    { href: '/friends', label: '友链', icon: '🔗' },
     { href: '/about', label: '关于', icon: '👤' },
   ],
   search: {
@@ -86,4 +99,24 @@ export const navigationConfig: NavigationConfig = {
     errorText: '搜索失败，请稍后重试',
     startText: '开始输入以搜索文章...',
   },
+};
+
+export const friendsConfig: FriendsConfig = {
+  friends: [
+    {
+      name: '示例朋友',
+      url: 'https://example.com',
+      avatar: '/imgs/default-avatar.svg',
+      description: '这是一个示例友链，你可以在这里添加你的朋友们的博客信息',
+      tags: ['技术', '博客', '示例']
+    },
+    // 你可以在这里添加更多的朋友信息
+    // {
+    //   name: '朋友的名字',
+    //   url: 'https://friend-blog.com',
+    //   avatar: 'https://friend-blog.com/avatar.jpg',
+    //   description: '朋友的博客描述',
+    //   tags: ['标签1', '标签2']
+    // }
+  ]
 };

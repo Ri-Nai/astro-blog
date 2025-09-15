@@ -1,0 +1,397 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import { friendsConfig } from "../config";
+import "../styles/global.css";
+---
+
+<BaseLayout
+  title="友链 - Ri-Nai 的博客"
+  description="我的朋友们和他们的精彩博客"
+>
+  <Navigation />
+  <main>
+    <div class="friends-page">
+      <div class="container">
+        <!-- 页面标题 -->
+        <section class="hero-section">
+          <div class="hero-content">
+            <h1 class="hero-title">🔗 友链</h1>
+            <p class="hero-subtitle">我的朋友们和他们的精彩博客</p>
+            <div class="hero-description">
+              <p>这里收集了一些我关注的朋友们的博客和网站</p>
+              <p>如果你也想交换友链，欢迎联系我！</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 友链列表 -->
+        <section class="friends-section">
+          <h2 class="section-title">
+            <span class="title-icon">👥</span>
+            我的朋友
+          </h2>
+          <div class="friends-grid">
+            {
+              friendsConfig.friends.map((friend) => (
+                <a
+                  href={friend.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="friend-card"
+                >
+                  <div class="friend-avatar">
+                    <img
+                      src={friend.avatar}
+                      alt={`${friend.name} 头像`}
+                      loading="lazy"
+                      onerror="this.src='/imgs/default-avatar.svg'"
+                    />
+                  </div>
+                  <div class="friend-info">
+                    <h3 class="friend-name">{friend.name}</h3>
+                    <p class="friend-description">{friend.description}</p>
+                    <div class="friend-tags">
+                      {friend.tags.map((tag) => (
+                        <span class="friend-tag">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div class="friend-link-icon">🔗</div>
+                </a>
+              ))
+            }
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .friends-page {
+    padding: 2rem 0;
+    min-height: calc(100vh - 4rem);
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  /* 英雄区域 */
+  .hero-section {
+    text-align: center;
+    padding: 4rem 0;
+    margin-bottom: 4rem;
+    background: linear-gradient(
+      135deg,
+      var(--bg-soft) 0%,
+      var(--bg-primary) 100%
+    );
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-bottom: 1rem;
+    display: inline-block;
+  }
+
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-weight: 300;
+  }
+
+  .hero-description {
+    max-width: 600px;
+    margin: 0 auto;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .hero-description p {
+    margin: 0.5rem 0;
+  }
+
+  /* 通用区域样式 */
+  section {
+    margin-bottom: 4rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .title-icon {
+    font-size: 1.8rem;
+  }
+
+  /* 友链网格 */
+  .friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+  }
+
+  .friend-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-md);
+    padding: 2rem;
+    text-decoration: none;
+    transition: var(--blog-transition);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .friend-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--blog-shadow-2);
+    border-color: var(--brand-primary);
+  }
+
+  .friend-card:hover .friend-link-icon {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  .friend-avatar {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--brand-primary);
+    position: relative;
+  }
+
+  .friend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--blog-transition);
+  }
+
+  .friend-card:hover .friend-avatar img {
+    transform: scale(1.1);
+  }
+
+  .friend-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .friend-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .friend-description {
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .friend-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .friend-tag {
+    background: var(--bg-soft);
+    color: var(--brand-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--brand-primary);
+  }
+
+  .friend-link-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.2rem;
+    opacity: 0.3;
+    transition: var(--blog-transition);
+  }
+
+  /* 申请友链区域 */
+  .apply-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .apply-info,
+  .my-info {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-md);
+    padding: 2rem;
+  }
+
+  .apply-info h3,
+  .my-info h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1.5rem 0;
+  }
+
+  .apply-info p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 1rem 0;
+  }
+
+  .apply-requirements {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+  }
+
+  .apply-requirements li {
+    color: var(--text-secondary);
+    margin: 0.75rem 0;
+    padding-left: 0;
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .contact-link {
+    background: var(--brand-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--blog-radius-md);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--blog-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .contact-link:hover {
+    background: var(--brand-light);
+    transform: translateY(-2px);
+    box-shadow: var(--blog-shadow-1);
+  }
+
+  .my-info-card {
+    background: var(--bg-soft);
+    border-radius: var(--blog-radius-sm);
+    padding: 1.5rem;
+  }
+
+  .my-info-item {
+    margin: 1rem 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .my-info-item strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      text-align: left;
+      justify-content: flex-start;
+    }
+
+    .friends-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .friend-card {
+      padding: 1.5rem;
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .friend-avatar {
+      width: 60px;
+      height: 60px;
+    }
+
+    .friend-name {
+      white-space: normal;
+      text-align: center;
+    }
+
+    .apply-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .contact-links {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-title {
+      font-size: 1.75rem;
+    }
+
+    .friend-card,
+    .apply-info,
+    .my-info {
+      padding: 1.5rem;
+    }
+
+    .my-info-card {
+      padding: 1rem;
+    }
+  }
+</style>
