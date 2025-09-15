@@ -1,4 +1,5 @@
 import { getCollection } from 'astro:content';
+import { getBlogPostPath } from '../../utils/pathUtils';
 
 export async function GET() {
   const posts = await getCollection('blog');
@@ -6,7 +7,7 @@ export async function GET() {
   const postsData = posts.map((post) => ({
     title: post.data.title,
     description: post.data.description,
-    url: `/blog/${post.id}`,
+    url: getBlogPostPath(post.id),
     date: post.data.pubDate.toISOString(),
     category: post.data.category,
     tags: post.data.tags,

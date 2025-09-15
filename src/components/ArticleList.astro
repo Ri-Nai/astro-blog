@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { getReadingTime } from '../utils/readingTime';
+import { getBlogPostPath, getBlogListPath, getAssetPath } from '../utils/pathUtils';
 
 export interface Props {
   posts: CollectionEntry<'blog'>[];
@@ -13,12 +14,12 @@ export interface Props {
   enableFiltering?: boolean;
 }
 
-const { 
-  posts, 
-  showTitle = true, 
-  title = "📝 最新文章", 
+const {
+  posts,
+  showTitle = true,
+  title = "📝 最新文章",
   showViewAll = true,
-  viewAllLink = "/blog",
+  viewAllLink = getBlogListPath(),
   limit,
   showHeroImage = false,
   enableFiltering = false
@@ -54,10 +55,10 @@ const formatDate = (date: Date) => {
       )}
     </div>
   )}
-  
+
   <div class="articles-list">
     {postsWithReadingTime.map(({ post, readingTime }) => (
-      <article 
+      <article
         class="article-item"
         {...(enableFiltering ? {
           'data-tags': post.data.tags.join(','),
@@ -69,24 +70,24 @@ const formatDate = (date: Date) => {
           <div class="article-header">
             <div class="article-main">
               <h3 class="article-title">
-                <a href={`/blog/${post.slug}`} class="article-link">
+                <a href={getBlogPostPath(post.slug)} class="article-link">
                   {post.data.title}
                 </a>
               </h3>
-              
+
               {post.data.description && (
                 <p class="article-excerpt">
                   {post.data.description}
                 </p>
               )}
             </div>
-            
+
             <!-- 右侧封面图片 -->
             {showHeroImage && post.data.heroImage && (
               <div class="article-hero">
-                <a href={`/blog/${post.slug}`}>
-                <img 
-                  src={post.data.heroImage} 
+                <a href={getBlogPostPath(post.slug)}>
+                <img
+                  src={getAssetPath(post.data.heroImage)}
                   alt={post.data.title}
                   class="hero-image"
                   />
@@ -112,15 +113,15 @@ const formatDate = (date: Date) => {
           <div class="article-footer">
             <div class="article-tags-section">
               {post.data.category && (
-                <a href={`/blog?category=${encodeURIComponent(post.data.category)}`} class="category-badge">
+                <a href={getBlogListPath({ category: post.data.category })} class="category-badge">
                   📂 {post.data.category}
                 </a>
               )}
-              
+
               {post.data.tags.length > 0 && (
                 <div class="article-tags">
                   {post.data.tags.slice(0, 4).map((tag) => (
-                    <a href={`/blog?tag=${encodeURIComponent(tag)}`} class="article-tag">
+                    <a href={getBlogListPath({ tag })} class="article-tag">
                       {tag}
                     </a>
                   ))}
@@ -132,8 +133,8 @@ const formatDate = (date: Date) => {
                 </div>
               )}
             </div>
-            
-            <a href={`/blog/${post.slug}`} class="read-more">
+
+            <a href={getBlogPostPath(post.slug)} class="read-more">
               阅读更多 →
             </a>
           </div>
@@ -441,13 +442,13 @@ const formatDate = (date: Date) => {
       gap: 1rem;
       flex-direction: column;
     }
-    
+
     .article-footer {
       flex-direction: column;
       gap: 1rem;
       align-items: flex-start;
     }
-    
+
     .article-tags-section {
       gap: 0.5rem;
     }

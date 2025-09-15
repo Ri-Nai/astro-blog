@@ -1,5 +1,6 @@
 ---
 import { profileConfig } from "../config";
+import { getNavPath, getAssetPath } from "../utils/pathUtils";
 
 // 动态导入SVG文件
 const svgContents: Record<string, string> = {};
@@ -21,13 +22,13 @@ for (const link of profileConfig.socialLinks) {
 
 <div class="profile-card">
   <div class="profile-avatar">
-    <a href="/about/">
-      <img src={profileConfig.avatar} alt={profileConfig.name} />
+    <a href={getNavPath("/about/")}>
+      <img src={getAssetPath(profileConfig.avatar)} alt={profileConfig.name} />
     </a>
   </div>
   <div class="profile-info">
     <h3 class="profile-name">
-      <a href="/about/">{profileConfig.name}</a>
+      <a href={getNavPath("/about/")}>{profileConfig.name}</a>
     </h3>
     <p class="profile-bio">{profileConfig.bio}</p>
     <div class="profile-social">

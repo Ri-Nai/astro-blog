@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navigation from '../components/Navigation.astro';
 import { profileConfig } from '../config';
+import { getAssetPath } from '../utils/pathUtils';
 import '../styles/global.css';
 
 // 动态导入SVG文件
@@ -31,12 +32,12 @@ for (const link of profileConfig.socialLinks) {
         <section class="hero-section">
           <div class="hero-content">
             <div class="avatar-section">
-              <img 
-                src="/imgs/avatar.jpg" 
-                alt="Ri-Nai 头像" 
+              <img
+                src={getAssetPath("/imgs/avatar.jpg")}
+                alt="Ri-Nai 头像"
                 class="avatar"
                 loading="eager"
-                onerror="this.src='/imgs/default-avatar.svg'"
+                onerror={`this.src='${getAssetPath("/imgs/default-avatar.svg")}'`}
               />
               <div class="avatar-decoration"></div>
             </div>
@@ -64,7 +65,7 @@ for (const link of profileConfig.socialLinks) {
                 <p class="competition-result">二等奖</p>
               </div>
             </div>
-            
+
             <div class="competition-item">
               <div class="competition-year">2020</div>
               <div class="competition-content">
@@ -72,7 +73,7 @@ for (const link of profileConfig.socialLinks) {
                 <p class="competition-result">二等奖</p>
               </div>
             </div>
-            
+
             <div class="competition-item">
               <div class="competition-year">2024</div>
               <div class="competition-content">
@@ -80,7 +81,7 @@ for (const link of profileConfig.socialLinks) {
                 <p class="competition-result bronze">铜牌</p>
               </div>
             </div>
-            
+
             <div class="competition-item">
               <div class="competition-year">2024</div>
               <div class="competition-content">
@@ -116,12 +117,12 @@ for (const link of profileConfig.socialLinks) {
               <p>平时喜欢挂京吹系头像，伞木希美、久石奏、黄前久美子、甚至高坂丽奈。</p>
               <p>说起来就是因为 高坂丽奈（Kasuga Reina）的名字和我的原 ID 很像，比起拼音还是用 <code>Reina</code> 更好看。</p>
             </div>
-            
+
             <div class="interest-category">
               <h3 class="category-title">🎮 游戏</h3>
               <p>最喜欢的游戏是 <a href="https://store.steampowered.com/app/504230/celeste/" target="_blank" rel="noopener noreferrer" class="game-link">celeste</a>，平常一般在 <a href="https://store.steampowered.com/app/646570/Slay_the_Spire/" target="_blank" rel="noopener noreferrer" class="game-link">爬塔</a>。</p>
             </div>
-            
+
             <div class="interest-category">
               <h3 class="category-title">💖 其他</h3>
               <p>没有特别喜欢的东西，大部分都是了解的差不多，没有厨的角色，也没有想入一辈子的坑。</p>

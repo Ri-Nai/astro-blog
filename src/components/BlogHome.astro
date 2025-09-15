@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import ArticleList from "./ArticleList.astro";
 import { profileConfig } from "../config";
+import { getAssetPath } from "../utils/pathUtils";
 
 const allPosts = await getCollection("blog");
 const visiblePosts = allPosts.filter((post) => !post.data.hidden);
@@ -47,11 +48,11 @@ for (const link of profileConfig.socialLinks) {
     <div class="hero-content">
       <div class="hero-avatar">
         <img
-          src="/imgs/avatar.jpg"
+          src={getAssetPath("/imgs/avatar.jpg")}
           alt="博主头像"
           class="avatar-image"
           loading="eager"
-          onerror="this.src='/imgs/default-avatar.svg'"
+          onerror={`this.src='${getAssetPath("/imgs/default-avatar.svg")}'`}
         />
       </div>
       <h1 class="hero-title">欢迎来到 Ri-Nai 的博客</h1>

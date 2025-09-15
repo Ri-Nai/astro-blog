@@ -7,7 +7,9 @@ import rehypeKatex from 'rehype-katex';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://example.com',
+	site: 'https://ri-nai.github.io',
+  base: '/astro-blog',
+  trailingSlash: 'ignore',
 	integrations: [mdx(), sitemap(), tailwind()],
 	markdown: {
 		shikiConfig: {

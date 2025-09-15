@@ -1,11 +1,13 @@
 ---
+import { getBasePath } from '../utils/pathUtils';
+
 // Gallery.astro - 图片画廊组件
 export interface Props {
   class?: string;
   basePath?: string; // 图片基础路径
 }
 
-const { class: className, basePath = "" } = Astro.props;
+const { class: className, basePath = getBasePath() } = Astro.props;
 ---
 
 <div class={`gallery ${className || ""}`}>
@@ -122,7 +124,7 @@ const { class: className, basePath = "" } = Astro.props;
             const blogIndex = pathParts.indexOf("blog");
             if (blogIndex !== -1 && pathParts.length > blogIndex + 1) {
               const blogPath = pathParts.slice(blogIndex + 1).join("/");
-              newSrc = `/imgs/blog/${blogPath}/${src}`;
+              newSrc = `${basePath}/imgs/blog/${blogPath}/${src}`;
             }
           }
 

@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import { friendsConfig } from "../config";
+import { getAssetPath } from "../utils/pathUtils";
 import "../styles/global.css";
 ---
 
@@ -42,10 +43,10 @@ import "../styles/global.css";
                 >
                   <div class="friend-avatar">
                     <img
-                      src={friend.avatar}
+                      src={getAssetPath(friend.avatar)}
                       alt={`${friend.name} 头像`}
                       loading="lazy"
-                      onerror="this.src='/imgs/default-avatar.svg'"
+                      onerror={`this.src='${getAssetPath("/imgs/default-avatar.svg")}'`}
                     />
                   </div>
                   <div class="friend-info">

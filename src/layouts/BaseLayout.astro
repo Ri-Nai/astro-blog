@@ -19,56 +19,56 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    
+
     <!-- Canonical URL -->
     <link rel="canonical" href={canonicalURL} />
-    
+
     <!-- Primary Meta Tags -->
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={Astro.url} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {image && <meta property="og:image" content={new URL(image, Astro.url)} />}
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content={Astro.url} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
     {image && <meta property="twitter:image" content={new URL(image, Astro.url)} />}
-    
+
     <!-- Robots -->
     {noindex && <meta name="robots" content="noindex" />}
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Preload avatar -->
     <link rel="preload" href="/imgs/avatar.jpg" as="image" type="image/jpeg">
-    
+
     <!-- KaTeX CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-Tv5i2X6pzTx6P3pEfJGnSxzNPxvE2mfO7tYd+0m2QGFJ1kq0c+7f3bV3EV8wKJlN" crossorigin="anonymous">
-    
+
     <!-- 高质量数学字体支持 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
+
     <!-- Libertinus Math - 现代高质量数学字体 -->
     <link href="https://fonts.googleapis.com/css2?family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-    
+
     <!-- STIX Two Math - OpenType数学字体 -->
     <link href="https://fonts.googleapis.com/css2?family=STIX+Two+Math&display=swap" rel="stylesheet">
-    
+
     <!-- Fira Math - 现代无衬线数学字体 -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Math&display=swap" rel="stylesheet">
-    
+
     <!-- 本地字体资源 -->
     <style>
       @font-face {
@@ -78,7 +78,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         font-style: normal;
         font-display: swap;
       }
-      
+
       @font-face {
         font-family: 'TeX Gyre Termes Math';
         src: url('https://github.com/ArtifexSoftware/urw-base35-fonts/raw/master/fonts/TeXGyreTermes-Regular.otf') format('opentype');
@@ -86,7 +86,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         font-style: normal;
         font-display: swap;
       }
-      
+
       /* MathML 原生支持样式 */
       math {
         font-family: 'Libertinus Math', 'STIX Two Math', 'TeX Gyre Termes Math', 'Cambria Math', serif !important;
@@ -97,7 +97,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
-      
+
       /* MathML 块级公式 */
       math[display="block"] {
         display: block;
@@ -105,65 +105,65 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         margin: 1.5em 0;
         font-size: 1.2em;
       }
-      
+
       /* MathML 行内公式 */
       math:not([display="block"]) {
         display: inline;
         vertical-align: baseline;
       }
-      
+
       /* MathML 分数 */
       mfrac {
         font-size: 0.9em;
       }
-      
+
       /* MathML 上下标 */
       msup, msub, msubsup {
         font-size: 0.8em;
       }
-      
+
       /* MathML 根号 */
       msqrt, mroot {
         font-size: 1em;
       }
-      
+
       /* MathML 运算符 */
       mo {
         font-family: 'Libertinus Math', 'STIX Two Math', serif;
         font-size: 1.1em;
       }
-      
+
       /* MathML 标识符（变量） */
       mi {
         font-style: italic;
         font-family: 'Libertinus Math', 'STIX Two Math', serif;
       }
-      
+
       /* MathML 数字 */
       mn {
         font-style: normal;
         font-family: 'Libertinus Math', 'STIX Two Math', serif;
       }
     </style>
-    
+
     <!-- Additional head content -->
     <slot name="head" />
   </head>
-  
+
   <body>
     <slot />
-    
+
     <!-- 返回顶部按钮 -->
     <button id="back-to-top" class="back-to-top" aria-label="返回顶部">
       <span class="back-to-top-icon">↑</span>
     </button>
-    
+
     <!-- 全局样式 -->
     <style>
       html {
         font-family: 'Inter', system-ui, sans-serif;
       }
-      
+
       main {
         flex: 1;
       }
@@ -238,18 +238,18 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         }
       }
     </style>
-    
+
     <!-- 代码块复制功能脚本 -->
     <script>
       // 代码块复制功能
       function initCodeCopyButtons() {
         // 为所有代码块添加复制按钮
         const codeBlocks = document.querySelectorAll('pre');
-        
+
         codeBlocks.forEach((pre) => {
           // 跳过已经有复制按钮的代码块
           if (pre.querySelector('.code-copy-btn')) return;
-          
+
           // 创建复制按钮
           const copyBtn = document.createElement('button');
           copyBtn.className = 'code-copy-btn';
@@ -260,52 +260,52 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
             </svg>
             <span class="copy-text">复制</span>
           `;
-          
+
           // 添加点击事件
           copyBtn.addEventListener('click', async () => {
             try {
               // 获取代码内容
               const codeElement = pre.querySelector('code');
               const textToCopy = codeElement ? codeElement.textContent || '' : pre.textContent || '';
-              
+
               // 复制到剪贴板
               await navigator.clipboard.writeText(textToCopy);
-              
+
               // 更新按钮状态
               const copyText = copyBtn.querySelector('.copy-text');
               const originalText = copyText?.textContent || '复制';
-              
+
               copyBtn.classList.add('copied');
               if (copyText) copyText.textContent = '已复制';
-              
+
               // 2秒后恢复原状态
               setTimeout(() => {
                 copyBtn.classList.remove('copied');
                 if (copyText) copyText.textContent = originalText;
               }, 2000);
-              
+
             } catch (err) {
               console.error('复制失败:', err);
-              
+
               // 降级方案：使用传统的选择和复制方法
               const range = document.createRange();
               const codeElement = pre.querySelector('code') || pre;
               range.selectNodeContents(codeElement);
-              
+
               const selection = window.getSelection();
               if (selection) {
                 selection.removeAllRanges();
                 selection.addRange(range);
               }
-              
+
               try {
                 document.execCommand('copy');
                 if (selection) selection.removeAllRanges();
-                
+
                 const copyText = copyBtn.querySelector('.copy-text');
                 copyBtn.classList.add('copied');
                 if (copyText) copyText.textContent = '已复制';
-                
+
                 setTimeout(() => {
                   copyBtn.classList.remove('copied');
                   if (copyText) copyText.textContent = '复制';
@@ -316,45 +316,45 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
               }
             }
           });
-          
+
           // 将按钮添加到代码块
           pre.appendChild(copyBtn);
         });
       }
-      
+
       // 页面加载完成后初始化复制按钮
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initCodeCopyButtons);
       } else {
         initCodeCopyButtons();
       }
-      
+
       // 对于动态加载的内容，可以提供重新初始化的方法
       (window as any).initCodeCopyButtons = initCodeCopyButtons;
 
       // 行内代码点击复制功能
       function initInlineCodeCopy() {
         const inlineCodes = document.querySelectorAll(':not(pre) > code');
-        
+
         inlineCodes.forEach(code => {
           // 跳过已经有事件监听器的代码块
           if (code.hasAttribute('data-copy-initialized')) return;
-          
+
           code.addEventListener('click', async (event) => {
             const target = event.currentTarget;
-            
+
             try {
               // 复制文本到剪贴板
               await navigator.clipboard.writeText(target.textContent || '');
-              
+
               // 添加复制成功样式
               target.classList.add('copied');
-              
+
               // 2秒后恢复原始状态
               setTimeout(() => {
                 target.classList.remove('copied');
               }, 2000);
-              
+
             } catch (err) {
               // 如果剪贴板API不可用，使用传统方法
               const textArea = document.createElement('textarea');
@@ -363,7 +363,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
               textArea.select();
               document.execCommand('copy');
               document.body.removeChild(textArea);
-              
+
               // 显示复制成功样式
               target.classList.add('copied');
               setTimeout(() => {
@@ -371,7 +371,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
               }, 2000);
             }
           });
-          
+
           // 标记为已初始化
           code.setAttribute('data-copy-initialized', 'true');
         });
@@ -390,13 +390,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       // 返回顶部功能
       function initBackToTop() {
         const backToTopButton = document.getElementById('back-to-top');
-        
+
         if (!backToTopButton) return;
 
         // 监听滚动事件
         window.addEventListener('scroll', () => {
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          
+
           if (scrollTop > 300) {
             backToTopButton.classList.add('show');
           } else {

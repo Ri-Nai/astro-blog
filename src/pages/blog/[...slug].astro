@@ -9,6 +9,7 @@ import Image from '../../components/Image.astro';
 import GalleryBreak from '../../components/GalleryBreak.astro';
 
 import { getReadingTime } from '../../utils/readingTime';
+import { getBlogPostPath, getAssetPath, getNavPath, getBlogListPath } from '../../utils/pathUtils';
 import '../../styles/global.css';
 import '../../styles/blog-content.css';
 
@@ -437,16 +438,16 @@ const relatedPosts = allPosts
         <header class="post-header">
           {post.data.heroImage && (
             <div class="hero-image">
-              <img src={post.data.heroImage} alt={post.data.title} />
+              <img src={getAssetPath(post.data.heroImage)} alt={post.data.title} />
               <div class="hero-overlay"></div>
             </div>
           )}
 
           <div class="post-meta-top">
             <nav class="breadcrumb">
-              <a href="/">首页</a>
+              <a href={getNavPath("/")}>首页</a>
               <span class="separator">›</span>
-              <a href="/blog">文章</a>
+              <a href={getNavPath("/blog")}>文章</a>
               <span class="separator">›</span>
               <span class="current">{post.data.title}</span>
             </nav>
@@ -484,7 +485,7 @@ const relatedPosts = allPosts
             <!-- 标签和分类 -->
             <div class="post-taxonomy">
               {post.data.category && (
-                <a href={`/blog?category=${encodeURIComponent(post.data.category)}`} class="post-category">
+                <a href={getBlogListPath({ category: post.data.category })} class="post-category">
                   <span class="category-icon">📂</span>
                   <span class="category-name">{post.data.category}</span>
                 </a>
@@ -494,7 +495,7 @@ const relatedPosts = allPosts
                 <div class="post-tags">
                   <span class="tags-label">🏷️ 标签：</span>
                   {post.data.tags.map((tag) => (
-                    <a href={`/blog?tag=${encodeURIComponent(tag)}`} class="tag-link">
+                    <a href={getBlogListPath({ tag })} class="tag-link">
                       {tag}
                     </a>
                   ))}
@@ -526,7 +527,7 @@ const relatedPosts = allPosts
         <!-- 文章底部 -->
         <footer class="post-footer">
           <div class="post-navigation">
-            <a href="/blog" class="back-to-list">
+            <a href={getNavPath("/blog")} class="back-to-list">
               <span class="nav-arrow">←</span>
               返回文章列表
             </a>
@@ -560,12 +561,12 @@ const relatedPosts = allPosts
               <article class="related-card">
                 {relatedPost.data.heroImage && (
                   <div class="related-image">
-                    <img src={relatedPost.data.heroImage} alt={relatedPost.data.title} />
+                    <img src={getAssetPath(relatedPost.data.heroImage)} alt={relatedPost.data.title} />
                   </div>
                 )}
                 <div class="related-content">
                   <h3 class="related-post-title">
-                    <a href={`/blog/${relatedPost.slug}`}>
+                    <a href={getBlogPostPath(relatedPost.slug)}>
                       {relatedPost.data.title}
                     </a>
                   </h3>
