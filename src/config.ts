@@ -19,6 +19,25 @@ export interface SiteConfig {
   postsPerPage: number;
 }
 
+export interface NavigationConfig {
+  brand: {
+    icon: string;
+    text: string;
+  };
+  navItems: {
+    href: string;
+    label: string;
+    icon: string;
+  }[];
+  search: {
+    placeholder: string;
+    title: string;
+    noResultsText: string;
+    errorText: string;
+    startText: string;
+  };
+}
+
 
 
 export const profileConfig: ProfileConfig = {
@@ -48,4 +67,23 @@ export const profileConfig: ProfileConfig = {
       icon: '/icons/steam.svg',
     },
   ],
+};
+
+export const navigationConfig: NavigationConfig = {
+  brand: {
+    icon: '✨',
+    text: '我的博客',
+  },
+  navItems: [
+    { href: '/', label: '首页', icon: '🏠' },
+    { href: '/blog', label: '文章', icon: '📝' },
+    { href: '/about', label: '关于', icon: '👤' },
+  ],
+  search: {
+    placeholder: '输入关键词搜索文章...',
+    title: '🔍 搜索文章',
+    noResultsText: '未找到相关文章',
+    errorText: '搜索失败，请稍后重试',
+    startText: '开始输入以搜索文章...',
+  },
 };

@@ -1,11 +1,8 @@
 ---
-const currentPath = Astro.url.pathname;
+import { navigationConfig } from '../config';
 
-const navItems = [
-  { href: "/", label: "首页", icon: "🏠" },
-  { href: "/blog", label: "文章", icon: "📝" },
-  { href: "/about", label: "关于", icon: "👤" },
-];
+const currentPath = Astro.url.pathname;
+const { brand, navItems, search } = navigationConfig;
 ---
 
 <nav class="navbar">
@@ -13,8 +10,8 @@ const navItems = [
     <!-- Logo -->
     <div class="nav-brand">
       <a href="/" class="brand-link">
-        <span class="brand-icon">✨</span>
-        <span class="brand-text">我的博客</span>
+        <span class="brand-icon">{brand.icon}</span>
+        <span class="brand-text">{brand.text}</span>
       </a>
     </div>
 
@@ -76,7 +73,7 @@ const navItems = [
     <div class="search-overlay"></div>
     <div class="search-container">
       <div class="search-header">
-        <h3 class="search-title">🔍 搜索文章</h3>
+        <h3 class="search-title">{search.title}</h3>
         <button id="search-close" class="search-close" aria-label="关闭搜索">
           <span>✕</span>
         </button>
@@ -86,12 +83,12 @@ const navItems = [
           type="text"
           id="search-input"
           class="search-input"
-          placeholder="输入关键词搜索文章..."
+          placeholder={search.placeholder}
           autocomplete="off"
         />
       </div>
       <div id="search-results" class="search-results">
-        <p class="search-placeholder">开始输入以搜索文章...</p>
+        <p class="search-placeholder">{search.startText}</p>
       </div>
     </div>
   </div>
@@ -526,7 +523,7 @@ const navItems = [
   }
 </style>
 
-<script>
+<script define:vars={{ search }}>
   // Mobile menu toggle
   const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
   const mobileMenu = document.getElementById("mobile-menu");
@@ -550,30 +547,21 @@ const navItems = [
       : "light";
   };
 
-  const setTheme = (theme: string) => {
+  const setTheme = (theme) => {
     document.documentElement.setAttribute("data-theme", theme);
     document.documentElement.setAttribute("data-color-mode", theme);
     localStorage.setItem("theme", theme);
 
     if (theme === "dark") {
-      (lightIcon as HTMLElement)?.style.setProperty("opacity", "0");
-      (lightIcon as HTMLElement)?.style.setProperty(
-        "transform",
-        "rotate(180deg)",
-      );
-      (darkIcon as HTMLElement)?.style.setProperty("opacity", "1");
-      (darkIcon as HTMLElement)?.style.setProperty("transform", "rotate(0deg)");
+      lightIcon?.style.setProperty("opacity", "0");
+      lightIcon?.style.setProperty("transform", "rotate(180deg)");
+      darkIcon?.style.setProperty("opacity", "1");
+      darkIcon?.style.setProperty("transform", "rotate(0deg)");
     } else {
-      (lightIcon as HTMLElement)?.style.setProperty("opacity", "1");
-      (lightIcon as HTMLElement)?.style.setProperty(
-        "transform",
-        "rotate(0deg)",
-      );
-      (darkIcon as HTMLElement)?.style.setProperty("opacity", "0");
-      (darkIcon as HTMLElement)?.style.setProperty(
-        "transform",
-        "rotate(180deg)",
-      );
+      lightIcon?.style.setProperty("opacity", "1");
+      lightIcon?.style.setProperty("transform", "rotate(0deg)");
+      darkIcon?.style.setProperty("opacity", "0");
+      darkIcon?.style.setProperty("transform", "rotate(180deg)");
     }
   };
 
@@ -613,32 +601,32 @@ const navItems = [
   // 关闭搜索模态框
   function closeSearchModal() {
     searchModal?.classList.remove("show");
-    if (searchInput) (searchInput as HTMLInputElement).value = "";
+    if (searchInput) searchInput.value = "";
     if (searchResults)
       searchResults.innerHTML =
-        '<p class="search-placeholder">开始输入以搜索文章...</p>';
+        `<p class="search-placeholder">${search.startText}</p>`;
   }
 
   searchClose?.addEventListener("click", closeSearchModal);
   searchModal?.addEventListener("click", (e) => {
     if (
       e.target === searchModal ||
-      (e.target as HTMLElement)?.classList.contains("search-overlay")
+      e.target?.classList.contains("search-overlay")
     ) {
       closeSearchModal();
     }
   });
 
   // 搜索功能
-  let searchTimeout: NodeJS.Timeout;
+  let searchTimeout;
   searchInput?.addEventListener("input", (e) => {
-    const query = (e.target as HTMLInputElement).value.trim();
+    const query = e.target.value.trim();
 
     clearTimeout(searchTimeout);
 
     if (query.length < 2) {
-      searchResults!.innerHTML =
-        '<p class="search-placeholder">开始输入以搜索文章...</p>';
+      searchResults.innerHTML =
+        `<p class="search-placeholder">${search.startText}</p>`;
       return;
     }
 
@@ -648,7 +636,7 @@ const navItems = [
   });
 
   // 执行搜索
-  async function performSearch(query: string) {
+  async function performSearch(query) {
     try {
       // 这里可以实现实际的搜索逻辑
       // 目前使用简单的客户端搜索
@@ -656,7 +644,7 @@ const navItems = [
       const posts = await response.json();
 
       const results = posts.filter(
-        (post: any) =>
+        (post) =>
           post.title.toLowerCase().includes(query.toLowerCase()) ||
           post.description?.toLowerCase().includes(query.toLowerCase()) ||
           post.content?.toLowerCase().includes(query.toLowerCase()),
@@ -665,16 +653,16 @@ const navItems = [
       displaySearchResults(results, query);
     } catch (error) {
       console.error("搜索失败:", error);
-      searchResults!.innerHTML =
-        '<p class="search-no-results">搜索失败，请稍后重试</p>';
+      searchResults.innerHTML =
+        `<p class="search-no-results">${search.errorText}</p>`;
     }
   }
 
   // 显示搜索结果
-  function displaySearchResults(results: any[], query: string) {
+  function displaySearchResults(results, query) {
     if (results.length === 0) {
-      searchResults!.innerHTML =
-        '<p class="search-no-results">未找到相关文章</p>';
+      searchResults.innerHTML =
+        `<p class="search-no-results">${search.noResultsText}</p>`;
       return;
     }
 
@@ -693,11 +681,11 @@ const navItems = [
       )
       .join("");
 
-    searchResults!.innerHTML = resultsHTML;
+    searchResults.innerHTML = resultsHTML;
   }
 
   // 高亮搜索关键词
-  function highlightText(text: string, query: string): string {
+  function highlightText(text, query) {
     if (!query) return text;
     const regex = new RegExp(`(${query})`, "gi");
     return text.replace(regex, "<mark>$1</mark>");
