@@ -1,0 +1,150 @@
+---
+import { profileConfig } from "../config";
+---
+
+<div class="profile-card">
+  <div class="profile-avatar">
+    <a href="/about/">
+      <img src={profileConfig.avatar} alt={profileConfig.name} />
+    </a>
+  </div>
+  <div class="profile-info">
+    <h3 class="profile-name">
+      <a href="/about/">{profileConfig.name}</a>
+    </h3>
+    <p class="profile-bio">{profileConfig.bio}</p>
+    <div class="profile-social">
+      {
+        profileConfig.socialLinks.map((link) => (
+          <a
+            href={link.url}
+            title={link.name}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="social-link"
+          >
+            <span class="social-icon">{link.icon}</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .profile-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--blog-shadow-1);
+    transition: var(--blog-transition);
+    margin-bottom: 2rem;
+  }
+
+  .profile-card:hover {
+    box-shadow: var(--blog-shadow-2);
+    transform: translateY(-2px);
+  }
+
+  .profile-avatar {
+    margin-bottom: 1rem;
+  }
+
+  .profile-avatar img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--brand-primary);
+    transition: var(--blog-transition);
+  }
+
+  .profile-avatar img:hover {
+    transform: scale(1.05);
+    border-color: var(--brand-dark);
+  }
+
+  .profile-name {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .profile-name a {
+    color: inherit;
+    text-decoration: none;
+    transition: var(--blog-transition);
+  }
+
+  .profile-name a:hover {
+    color: var(--brand-primary);
+  }
+
+  .profile-bio {
+    margin: 0 0 1rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .profile-social {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    text-decoration: none;
+    transition: var(--blog-transition);
+  }
+
+  .social-link:hover {
+    background: var(--brand-lighter);
+    border-color: var(--brand-primary);
+    transform: scale(1.1);
+  }
+
+  .social-icon {
+    font-size: 1.2rem;
+  }
+
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    .profile-card {
+      padding: 1rem;
+    }
+
+    .profile-avatar img {
+      width: 60px;
+      height: 60px;
+    }
+
+    .profile-name {
+      font-size: 1.1rem;
+    }
+
+    .profile-bio {
+      font-size: 0.85rem;
+    }
+
+    .social-link {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .social-icon {
+      font-size: 1rem;
+    }
+  }
+</style>

@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from '../components/Navigation.astro';
+import BlogHome from '../components/BlogHome.astro';
+import '../styles/global.css';
+---
+
+<BaseLayout title="首页 - 我的博客" description="欢迎来到我的个人博客，分享技术心得和生活感悟">
+  <Navigation />
+  <main>
+    <BlogHome />
+  </main>
+</BaseLayout>
