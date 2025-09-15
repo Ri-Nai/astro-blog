@@ -1,5 +1,5 @@
 ---
-import { getBasePath } from '../utils/pathUtils';
+import { getBasePath, getAssetPath } from '../utils/pathUtils';
 
 // Gallery.astro - 图片画廊组件
 export interface Props {
@@ -124,7 +124,10 @@ const { class: className, basePath = getBasePath() } = Astro.props;
             const blogIndex = pathParts.indexOf("blog");
             if (blogIndex !== -1 && pathParts.length > blogIndex + 1) {
               const blogPath = pathParts.slice(blogIndex + 1).join("/");
-              newSrc = `${basePath}/imgs/blog/${blogPath}/${src}`;
+              // 在客户端脚本中，我们需要手动处理 base URL
+              const baseUrl = window.location.pathname.split('/')[1] || '';
+              const basePrefix = baseUrl ? `/${baseUrl}` : '';
+              newSrc = `${basePrefix}/imgs/blog/${blogPath}/${src}`;
             }
           }
 

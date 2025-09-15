@@ -3,6 +3,8 @@
  * 统一管理项目中所有图片路径的处理逻辑
  */
 
+import { getAssetPath } from './pathUtils';
+
 export interface ImagePathOptions {
   /** 图片基础路径 */
   basePath?: string;
@@ -38,7 +40,7 @@ export function getImagePath(imageSrc: string, options: ImagePathOptions = {}): 
     const blogIndex = pathParts.indexOf('blog');
     if (blogIndex !== -1 && pathParts.length > blogIndex + 1) {
       const blogPath = pathParts.slice(blogIndex + 1).join('/');
-      return `/imgs/blog/${blogPath}/${imageSrc}`;
+      return getAssetPath(`/imgs/blog/${blogPath}/${imageSrc}`);
     }
   }
 
@@ -81,7 +83,7 @@ export function getBlogImagePath(
   title: string,
   imageName: string
 ): string {
-  return `/imgs/blog/${year}/${month}/${day}/${title}/${imageName}`;
+  return getAssetPath(`/imgs/blog/${year}/${month}/${day}/${title}/${imageName}`);
 }
 
 /**
