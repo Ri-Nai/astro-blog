@@ -19,7 +19,6 @@ const blog = defineCollection({
     image: z.string().optional(),
     slug: z.string().optional(),
     hidden: z.boolean().default(false),
-    draft: z.boolean().default(false),
     math: z.boolean().default(false),
     license: z.string().optional(),
   }),

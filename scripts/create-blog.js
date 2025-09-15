@@ -93,7 +93,7 @@ async function createBlog(title) {
     console.log('💡 提示:');
     console.log('  - 编辑 index.mdx 文件来编写内容');
     console.log('  - 将图片放在同目录下，并更新 heroImage 路径');
-    console.log('  - 设置 draft: false 来发布文章');
+    console.log('  - 设置 hidden: false 来发布文章');
     console.log('  - 根据需要调整 category 和 tags');
 
   } catch (error) {

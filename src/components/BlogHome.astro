@@ -3,9 +3,7 @@ import { getCollection } from "astro:content";
 import ArticleList from "./ArticleList.astro";
 import { profileConfig } from "../config";
 
-const allPosts = await getCollection("blog", ({ data }) => {
-  return !data.draft;
-});
+const allPosts = await getCollection("blog");
 const visiblePosts = allPosts.filter((post) => !post.data.hidden);
 const recentPosts = visiblePosts
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())

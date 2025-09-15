@@ -13,9 +13,7 @@ import '../../styles/global.css';
 import '../../styles/blog-content.css';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog', ({ data }) => {
-    return !data.draft;
-  });
+  const posts = await getCollection('blog');
   return posts.map((post) => ({
     params: { slug: post.slug },
     props: post,
@@ -39,12 +37,10 @@ const formatDate = (date: Date) => {
 };
 
 // 获取相关文章（相同标签或分类，但排除隐藏文章）
-const allPosts = await getCollection('blog', ({ data }) => {
-  return !data.draft;
-});
+const allPosts = await getCollection('blog');
 const relatedPosts = allPosts
   .filter(p => p.slug !== post.slug && !p.data.hidden)
-  .filter(p => 
+  .filter(p =>
     p.data.category === post.data.category ||
     p.data.tags.some(tag => post.data.tags.includes(tag))
   )
@@ -52,8 +48,8 @@ const relatedPosts = allPosts
   .slice(0, 3);
 ---
 
-<BaseLayout 
-  title={post.data.title} 
+<BaseLayout
+  title={post.data.title}
   description={post.data.description || `阅读文章：${post.data.title}`}
   image={post.data.heroImage}
 >
@@ -72,16 +68,16 @@ const relatedPosts = allPosts
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
-      
+
       /* 数学符号专用样式 */
       .katex .mord {
         font-style: normal;
       }
-      
+
       .katex .mathit {
         font-style: italic;
       }
-      
+
       /* 优雅的块级公式样式 - 针对MathML和KaTeX */
       .katex-display,
       .katex:has(math[display="block"]),
@@ -90,9 +86,9 @@ const relatedPosts = allPosts
         margin: 2.5em 0;
         text-align: center;
         padding: 2em 1.5em;
-        background: linear-gradient(135deg, 
-          var(--bg-secondary) 0%, 
-          var(--bg-soft) 50%, 
+        background: linear-gradient(135deg,
+          var(--bg-secondary) 0%,
+          var(--bg-soft) 50%,
           var(--bg-secondary) 100%);
         border: 1px solid var(--border-color);
         border-left: 4px solid var(--brand-primary);
@@ -103,7 +99,7 @@ const relatedPosts = allPosts
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
       }
-      
+
       .katex-display::before,
       .katex:has(math[display="block"])::before,
       span.katex:has(math[display="block"])::before {
@@ -113,25 +109,25 @@ const relatedPosts = allPosts
         left: 0;
         right: 0;
         height: 1px;
-        background: linear-gradient(90deg, 
-          transparent 0%, 
-          var(--border-color) 50%, 
+        background: linear-gradient(90deg,
+          transparent 0%,
+          var(--border-color) 50%,
           transparent 100%);
       }
-      
+
       .katex-display:hover,
       .katex:has(math[display="block"]):hover,
       span.katex:has(math[display="block"]):hover {
-        background: linear-gradient(135deg, 
-          var(--bg-primary) 0%, 
-          var(--bg-mute) 50%, 
+        background: linear-gradient(135deg,
+          var(--bg-primary) 0%,
+          var(--bg-mute) 50%,
           var(--bg-primary) 100%);
         border-color: var(--brand-primary);
         border-left-color: var(--brand-primary);
         box-shadow: var(--blog-shadow-3);
         transform: translateY(-2px);
       }
-      
+
       .katex-display .katex {
         font-size: 1.3em;
         display: inline-block;
@@ -139,7 +135,7 @@ const relatedPosts = allPosts
         font-weight: 400;
         letter-spacing: 0.02em;
       }
-      
+
       /* 优雅的行内公式样式 */
       .katex-inline {
         margin: 0 0.15em;
@@ -152,13 +148,13 @@ const relatedPosts = allPosts
         vertical-align: baseline;
         border: 1px solid var(--border-color);
       }
-      
+
       .katex-inline:hover {
         background: var(--bg-mute);
         transform: scale(1.02);
         border-color: var(--brand-primary);
       }
-      
+
       /* LaTeX 风格数学符号渲染 */
       .katex .mord,
       .katex .mrel,
@@ -166,25 +162,25 @@ const relatedPosts = allPosts
       .katex .mop {
         font-weight: 400;
       }
-      
+
       /* 保持 LaTeX 原生分数线样式 */
       .katex .frac-line {
         border-bottom-color: currentColor;
         border-bottom-width: 0.04em;
       }
-      
+
       /* LaTeX 风格根号 */
       .katex .sqrt > .root {
         color: currentColor;
         font-weight: 400;
       }
-      
+
       /* LaTeX 风格积分符号 */
       .katex .mop.op-symbol {
         color: currentColor;
         font-weight: 400;
       }
-      
+
       /* LaTeX 风格括号和分隔符 */
       .katex .delimsizing,
       .katex .delim-size1,
@@ -194,152 +190,152 @@ const relatedPosts = allPosts
         color: currentColor;
         font-weight: 400;
       }
-      
+
       /* LaTeX 风格上下标 */
       .katex .msupsub {
         font-weight: 400;
       }
-      
+
       /* 优化希腊字母和变量显示 */
       .katex .mathdefault {
         font-style: italic;
         font-weight: 400;
         letter-spacing: 0.01em;
       }
-      
+
       /* 特殊数学符号优化 */
       .katex .mord.mathdefault,
       .katex .mord.mathrm {
         font-family: 'Libertinus Math', 'STIX Two Math', 'TeX Gyre Termes Math', serif;
       }
-      
+
       /* 数学运算符优化 */
       .katex .mop {
         font-family: 'Libertinus Math', 'STIX Two Math', serif;
         font-size: 1.1em;
       }
-      
+
       /* 积分、求和等大型运算符 */
       .katex .op-symbol.large-op {
         font-size: 1.8em;
         font-family: 'Libertinus Math', 'STIX Two Math', serif;
       }
-      
+
       /* 分数线优化 */
       .katex .frac-line {
         border-bottom-width: 0.06em;
         border-radius: 0.5px;
       }
-      
+
       /* 根号优化 */
       .katex .sqrt .sqrt-line {
         border-top-width: 0.06em;
       }
-      
+
       /* 手动白天模式明确适配 */
       [data-theme="light"] .katex-display,
       [data-theme="light"] .katex:has(math[display="block"]),
       [data-theme="light"] span.katex:has(math[display="block"]) {
-        background: linear-gradient(135deg, 
-          var(--bg-secondary) 0%, 
-          var(--bg-soft) 50%, 
+        background: linear-gradient(135deg,
+          var(--bg-secondary) 0%,
+          var(--bg-soft) 50%,
           var(--bg-secondary) 100%);
         border-color: var(--border-color);
         box-shadow: var(--blog-shadow-2);
       }
-      
+
       [data-theme="light"] .katex-display::before,
       [data-theme="light"] .katex:has(math[display="block"])::before,
       [data-theme="light"] span.katex:has(math[display="block"])::before {
-        background: linear-gradient(90deg, 
-          transparent 0%, 
-          var(--border-color) 50%, 
+        background: linear-gradient(90deg,
+          transparent 0%,
+          var(--border-color) 50%,
           transparent 100%);
       }
-      
+
       [data-theme="light"] .katex-display:hover,
       [data-theme="light"] .katex:has(math[display="block"]):hover,
       [data-theme="light"] span.katex:has(math[display="block"]):hover {
-        background: linear-gradient(135deg, 
-          var(--bg-primary) 0%, 
-          var(--bg-mute) 50%, 
+        background: linear-gradient(135deg,
+          var(--bg-primary) 0%,
+          var(--bg-mute) 50%,
           var(--bg-primary) 100%);
         border-color: var(--brand-primary);
         box-shadow: var(--blog-shadow-3);
       }
-      
+
       /* 手动暗色主题适配 */
       [data-theme="dark"] .katex-display,
       [data-theme="dark"] .katex:has(math[display="block"]),
       [data-theme="dark"] span.katex:has(math[display="block"]) {
-        background: linear-gradient(135deg, 
-          var(--bg-secondary) 0%, 
-          var(--bg-soft) 50%, 
+        background: linear-gradient(135deg,
+          var(--bg-secondary) 0%,
+          var(--bg-soft) 50%,
           var(--bg-secondary) 100%);
         border-color: var(--border-color);
         box-shadow: var(--blog-shadow-2);
       }
-      
+
       [data-theme="dark"] .katex-display::before,
       [data-theme="dark"] .katex:has(math[display="block"])::before,
       [data-theme="dark"] span.katex:has(math[display="block"])::before {
-        background: linear-gradient(90deg, 
-          transparent 0%, 
-          var(--border-color) 50%, 
+        background: linear-gradient(90deg,
+          transparent 0%,
+          var(--border-color) 50%,
           transparent 100%);
       }
-      
+
       [data-theme="dark"] .katex-display:hover,
       [data-theme="dark"] .katex:has(math[display="block"]):hover,
       [data-theme="dark"] span.katex:has(math[display="block"]):hover {
-        background: linear-gradient(135deg, 
-          var(--bg-primary) 0%, 
-          var(--bg-mute) 50%, 
+        background: linear-gradient(135deg,
+          var(--bg-primary) 0%,
+          var(--bg-mute) 50%,
           var(--bg-primary) 100%);
         border-color: var(--brand-primary);
         box-shadow: var(--blog-shadow-3);
       }
-      
+
       /* 系统暗色主题适配（保留作为后备） */
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme]) .katex-display,
         :root:not([data-theme]) .katex:has(math[display="block"]),
         :root:not([data-theme]) span.katex:has(math[display="block"]) {
-          background: linear-gradient(135deg, 
-            var(--bg-secondary) 0%, 
-            var(--bg-soft) 50%, 
+          background: linear-gradient(135deg,
+            var(--bg-secondary) 0%,
+            var(--bg-soft) 50%,
             var(--bg-secondary) 100%);
           border-color: var(--border-color);
           box-shadow: var(--blog-shadow-2);
         }
-        
+
         :root:not([data-theme]) .katex-display::before,
         :root:not([data-theme]) .katex:has(math[display="block"])::before,
         :root:not([data-theme]) span.katex:has(math[display="block"])::before {
-          background: linear-gradient(90deg, 
-            transparent 0%, 
-            var(--border-color) 50%, 
+          background: linear-gradient(90deg,
+            transparent 0%,
+            var(--border-color) 50%,
             transparent 100%);
         }
-        
+
         :root:not([data-theme]) .katex-display:hover,
         :root:not([data-theme]) .katex:has(math[display="block"]):hover,
         :root:not([data-theme]) span.katex:has(math[display="block"]):hover {
-          background: linear-gradient(135deg, 
-            var(--bg-primary) 0%, 
-            var(--bg-mute) 50%, 
+          background: linear-gradient(135deg,
+            var(--bg-primary) 0%,
+            var(--bg-mute) 50%,
             var(--bg-primary) 100%);
           border-color: var(--brand-primary);
           box-shadow: var(--blog-shadow-3);
         }
       }
-      
+
       /* 响应式数学公式 */
       @media (max-width: 768px) {
         .katex {
           font-size: 1.1em;
         }
-        
+
         .katex-display,
         .katex:has(math[display="block"]),
         span.katex:has(math[display="block"]) {
@@ -347,83 +343,83 @@ const relatedPosts = allPosts
           padding: 1.5em 1em;
           border-left-width: 3px;
           border-radius: 12px;
-          background: linear-gradient(135deg, 
-            var(--bg-secondary) 0%, 
+          background: linear-gradient(135deg,
+            var(--bg-secondary) 0%,
             var(--bg-soft) 100%);
         }
-        
+
         .katex-display .katex {
           font-size: 1.15em;
           padding: 0;
         }
-        
+
         .katex-display:hover,
         .katex:has(math[display="block"]):hover,
         span.katex:has(math[display="block"]):hover {
           transform: translateY(-1px);
           box-shadow: var(--blog-shadow-2);
         }
-        
+
         .katex-inline {
           margin: 0 0.1em;
           padding: 0.05em 0.15em;
         }
       }
-      
+
       @media (max-width: 480px) {
         .katex {
           font-size: 1.05em;
         }
-        
+
         .katex-display,
         .katex:has(math[display="block"]),
         span.katex:has(math[display="block"]) {
           margin: 1.5em 0;
           padding: 1.2em 0.8em;
           border-radius: 10px;
-          background: linear-gradient(135deg, 
-            var(--bg-secondary) 0%, 
+          background: linear-gradient(135deg,
+            var(--bg-secondary) 0%,
             var(--bg-soft) 100%);
           border-left-width: 2px;
         }
-        
+
         .katex-display .katex {
           font-size: 1.1em;
           padding: 0;
         }
-        
+
         .katex-display:hover,
         .katex:has(math[display="block"]):hover,
         span.katex:has(math[display="block"]):hover {
           transform: none;
           box-shadow: var(--blog-shadow-1);
         }
-        
+
         /* 移动端手动暗色主题适配 */
         [data-theme="dark"] .katex-display,
         [data-theme="dark"] .katex:has(math[display="block"]),
         [data-theme="dark"] span.katex:has(math[display="block"]) {
-          background: linear-gradient(135deg, 
-            var(--bg-secondary) 0%, 
+          background: linear-gradient(135deg,
+            var(--bg-secondary) 0%,
             var(--bg-soft) 100%);
         }
-        
+
         [data-theme="dark"] .katex-display:hover,
         [data-theme="dark"] .katex:has(math[display="block"]):hover,
         [data-theme="dark"] span.katex:has(math[display="block"]):hover {
           box-shadow: var(--blog-shadow-2);
         }
-        
+
         /* 移动端系统暗色主题适配（后备） */
         @media (prefers-color-scheme: dark) {
           :root:not([data-theme]) .katex-display,
           :root:not([data-theme]) .katex:has(math[display="block"]),
           :root:not([data-theme]) span.katex:has(math[display="block"]) {
-            background: linear-gradient(135deg, 
-              var(--bg-secondary) 0%, 
+            background: linear-gradient(135deg,
+              var(--bg-secondary) 0%,
               var(--bg-soft) 100%);
           }
-          
+
           :root:not([data-theme]) .katex-display:hover,
           :root:not([data-theme]) .katex:has(math[display="block"]):hover,
           :root:not([data-theme]) span.katex:has(math[display="block"]):hover {
@@ -445,7 +441,7 @@ const relatedPosts = allPosts
               <div class="hero-overlay"></div>
             </div>
           )}
-          
+
           <div class="post-meta-top">
             <nav class="breadcrumb">
               <a href="/">首页</a>
@@ -458,7 +454,7 @@ const relatedPosts = allPosts
 
           <div class="post-title-section">
             <h1 class="post-title">{post.data.title}</h1>
-            
+
             <div class="post-meta">
               <div class="meta-item">
                 <span class="meta-icon">📅</span>
@@ -466,17 +462,17 @@ const relatedPosts = allPosts
                   {formatDate(post.data.pubDate)}
                 </time>
               </div>
-              
+
               <div class="meta-item">
                 <span class="meta-icon">✍️</span>
                 <span>{post.data.author}</span>
               </div>
-              
+
               <div class="meta-item">
                 <span class="meta-icon">⏱️</span>
                 <span>{readingTime.text}阅读</span>
               </div>
-              
+
               {post.data.updatedDate && post.data.updatedDate !== post.data.pubDate && (
                 <div class="meta-item">
                   <span class="meta-icon">🔄</span>
@@ -493,7 +489,7 @@ const relatedPosts = allPosts
                   <span class="category-name">{post.data.category}</span>
                 </a>
               )}
-              
+
               {post.data.tags.length > 0 && (
                 <div class="post-tags">
                   <span class="tags-label">🏷️ 标签：</span>
@@ -521,7 +517,7 @@ const relatedPosts = allPosts
           <aside class="sidebar">
             <!-- 作者头像卡片 -->
             <ProfileCard />
-            
+
             <!-- 目录导航 -->
             {headings && headings.length > 0 && <TOC headings={headings} />}
           </aside>
@@ -1226,13 +1222,13 @@ const relatedPosts = allPosts
         newList.style.listStyle = 'none';
         newList.style.padding = '0';
         newList.style.margin = '0';
-        
+
         // 将新列表添加到当前列表的最后一个li中
         const lastLi = currentList.lastElementChild;
         if (lastLi) {
           lastLi.appendChild(newList);
         }
-        
+
         listStack.push(newList);
         levelStack.push(currentLevel);
       }
@@ -1240,22 +1236,22 @@ const relatedPosts = allPosts
       // 创建列表项和链接
       const listItem = document.createElement('li');
       const link = document.createElement('a');
-      
+
       link.href = `#${heading.id}`;
       link.textContent = heading.textContent || '';
-      
+
       // 添加平滑滚动
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const target = document.getElementById(heading.id);
         if (target) {
-          target.scrollIntoView({ 
+          target.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
           });
         }
       });
-      
+
       listItem.appendChild(link);
       listStack[listStack.length - 1].appendChild(listItem);
     });
@@ -1265,19 +1261,19 @@ const relatedPosts = allPosts
     // 添加滚动监听，高亮当前章节
     const tocLinks = tocContainer.querySelectorAll('a');
     let ticking = false;
-    
+
     function updateActiveTOC() {
       if (ticking) return;
       ticking = true;
-      
+
       requestAnimationFrame(() => {
         let current = '';
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
+
         headings.forEach((heading) => {
           const rect = heading.getBoundingClientRect();
           const elementTop = scrollTop + rect.top;
-          
+
           if (elementTop <= scrollTop + 200) {
             current = heading.id;
           }
@@ -1289,7 +1285,7 @@ const relatedPosts = allPosts
             link.classList.add('active');
           }
         });
-        
+
         ticking = false;
       });
     }

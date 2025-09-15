@@ -5,9 +5,7 @@ import Navigation from '../../components/Navigation.astro';
 import ArticleList from '../../components/ArticleList.astro';
 import '../../styles/global.css';
 
-const allPosts = await getCollection('blog', ({ data }) => {
-  return !data.draft;
-});
+const allPosts = await getCollection('blog');
 const posts = allPosts
   .filter(post => !post.data.hidden)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
@@ -108,7 +106,7 @@ const getDifficultyText = (difficulty?: string) => {
 
       <!-- 文章列表 -->
       <div id="articles-container">
-        <ArticleList 
+        <ArticleList
           posts={posts}
           showTitle={false}
           showViewAll={false}
@@ -330,29 +328,29 @@ const getDifficultyText = (difficulty?: string) => {
     .blog-container {
       padding: 1rem 0.5rem;
     }
-    
+
     .blog-title {
       font-size: 2rem;
       line-height: 1.4;
       padding: 0.15rem 0;
     }
-    
+
     .stats-section {
       gap: 1rem;
       align-items: center;
     }
-    
+
     .stat-card {
       min-width: 100px;
     }
-    
 
-    
+
+
     .tag-cloud,
     .category-cloud {
       gap: 0.5rem;
     }
-    
+
     .tag-button,
     .category-button {
       font-size: 0.8rem;
@@ -522,7 +520,7 @@ const getDifficultyText = (difficulty?: string) => {
     const urlParams = new URLSearchParams(window.location.search);
     const tagParam = urlParams.get('tag');
     const categoryParam = urlParams.get('category');
-    
+
     if (tagParam) {
       selectedTags = [tagParam];
       tagButtons.forEach(btn => {
@@ -533,7 +531,7 @@ const getDifficultyText = (difficulty?: string) => {
         }
       });
     }
-    
+
     if (categoryParam) {
       selectedCategories = [categoryParam];
       categoryButtons.forEach(btn => {
