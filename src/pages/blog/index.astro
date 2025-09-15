@@ -256,16 +256,21 @@ const getDifficultyText = (difficulty?: string) => {
 
   .tag-count,
   .category-count {
-    background: var(--bg-soft);
+    background: var(--bg-mute);
     padding: 0.25rem 0.5rem;
-    border-radius: 12px;
+    border-radius: 50%;
     font-size: 0.8rem;
     font-weight: 600;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .tag-button.active .tag-count,
   .category-button.active .category-count {
-    background: var(--bg-mute);
+    background: rgba(255, 255, 255, 0.2);
   }
 
 
