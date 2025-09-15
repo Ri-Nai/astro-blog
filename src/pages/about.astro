@@ -1,10 +1,28 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navigation from '../components/Navigation.astro';
+import { profileConfig } from '../config';
 import '../styles/global.css';
+
+// 动态导入SVG文件
+const svgContents: Record<string, string> = {};
+
+// 根据config中的socialLinks动态导入SVG
+for (const link of profileConfig.socialLinks) {
+  if (link.icon.startsWith('/icons/')) {
+    try {
+      // 动态导入SVG文件
+      const svgModule = await import(`/public${link.icon}?raw`);
+      svgContents[link.icon] = svgModule.default;
+    } catch (error) {
+      console.error(`Failed to import SVG: ${link.icon}`, error);
+      svgContents[link.icon] = '';
+    }
+  }
+}
 ---
 
-<BaseLayout title="关于我 - 我的博客" description="了解更多关于我的信息，包括技术栈、项目经历和联系方式">
+<BaseLayout title="关于我 - Ri-Nai 的博客">
   <Navigation />
   <main>
     <div class="about-page">
@@ -15,149 +33,73 @@ import '../styles/global.css';
             <div class="avatar-section">
               <img 
                 src="/imgs/avatar.jpg" 
-                alt="博主头像" 
+                alt="Ri-Nai 头像" 
                 class="avatar"
                 loading="eager"
-                onerror="this.src='/images/default-avatar.svg'"
+                onerror="this.src='/imgs/default-avatar.svg'"
               />
               <div class="avatar-decoration"></div>
             </div>
-            <h1 class="hero-title">👋 你好，我是作者</h1>
-            <p class="hero-subtitle">一个热爱技术、喜欢分享的开发者</p>
+            <h1 class="hero-title">👋 你好，我是 Ri-Nai</h1>
+            <p class="hero-subtitle">常用ID：<code>Ri-Nai</code>、<code>Reina</code>、<code>日奈</code></p>
             <div class="hero-description">
-              <p>欢迎来到我的个人博客！我是一名充满热情的开发者，专注于前端技术和全栈开发。</p>
-              <p>在这里，我会分享我的技术心得、项目经验，以及对技术趋势的思考。</p>
+              <p>软件工程大二在读</p>
+              <p><strong>前</strong> OIer、ACMer</p>
             </div>
           </div>
         </section>
 
-        <!-- 技术栈 -->
-        <section class="tech-stack-section">
+        <!-- 竞赛经历 -->
+        <section class="competition-section">
           <h2 class="section-title">
-            <span class="title-icon">💻</span>
-            技术栈
+            <span class="title-icon">🏆</span>
+            竞赛经历
           </h2>
-          <div class="tech-categories">
-            <div class="tech-category">
-              <h3 class="category-title">前端技术</h3>
-              <div class="tech-items">
-                <span class="tech-item">HTML5</span>
-                <span class="tech-item">CSS3</span>
-                <span class="tech-item">JavaScript</span>
-                <span class="tech-item">TypeScript</span>
-                <span class="tech-item">React</span>
-                <span class="tech-item">Vue.js</span>
-                <span class="tech-item">Astro</span>
-                <span class="tech-item">Tailwind CSS</span>
+          <div class="competition-timeline">
+            <div class="competition-item">
+              <div class="competition-year">2019</div>
+              <div class="competition-content">
+                <h3 class="competition-title">CSP-J 2019</h3>
+                <p class="competition-result">二等奖</p>
               </div>
             </div>
             
-            <div class="tech-category">
-              <h3 class="category-title">后端技术</h3>
-              <div class="tech-items">
-                <span class="tech-item">Node.js</span>
-                <span class="tech-item">Python</span>
-                <span class="tech-item">Express</span>
-                <span class="tech-item">FastAPI</span>
-                <span class="tech-item">PostgreSQL</span>
-                <span class="tech-item">MongoDB</span>
-                <span class="tech-item">Redis</span>
+            <div class="competition-item">
+              <div class="competition-year">2020</div>
+              <div class="competition-content">
+                <h3 class="competition-title">CSP-S 2020</h3>
+                <p class="competition-result">二等奖</p>
               </div>
             </div>
             
-            <div class="tech-category">
-              <h3 class="category-title">工具 & 其他</h3>
-              <div class="tech-items">
-                <span class="tech-item">Git</span>
-                <span class="tech-item">Docker</span>
-                <span class="tech-item">VS Code</span>
-                <span class="tech-item">Figma</span>
-                <span class="tech-item">Linux</span>
-                <span class="tech-item">AWS</span>
-                <span class="tech-item">Vercel</span>
+            <div class="competition-item">
+              <div class="competition-year">2024</div>
+              <div class="competition-content">
+                <h3 class="competition-title">CCPC 2024 济南站</h3>
+                <p class="competition-result bronze">铜牌</p>
+              </div>
+            </div>
+            
+            <div class="competition-item">
+              <div class="competition-year">2024</div>
+              <div class="competition-content">
+                <h3 class="competition-title">ICPC 2024 EC-Final</h3>
+                <p class="competition-result silver">铁牌</p>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 项目经历 -->
-        <section class="projects-section">
+        <!-- 关于博客 -->
+        <section class="blog-section">
           <h2 class="section-title">
-            <span class="title-icon">🚀</span>
-            项目经历
+            <span class="title-icon">📝</span>
+            关于博客
           </h2>
-          <div class="projects-grid">
-            <div class="project-card">
-              <div class="project-header">
-                <h3 class="project-title">个人博客系统</h3>
-                <div class="project-tech">
-                  <span class="tech-tag">Astro</span>
-                  <span class="tech-tag">TypeScript</span>
-                  <span class="tech-tag">Tailwind</span>
-                </div>
-              </div>
-              <p class="project-description">
-                基于 Astro 构建的现代化博客系统，具有响应式设计、暗色模式、标签筛选等功能。
-              </p>
-              <div class="project-links">
-                <a href="https://github.com" target="_blank" class="project-link">
-                  <span class="link-icon">🔗</span>
-                  GitHub
-                </a>
-                <a href="#" class="project-link">
-                  <span class="link-icon">🌐</span>
-                  预览
-                </a>
-              </div>
-            </div>
-            
-            <div class="project-card">
-              <div class="project-header">
-                <h3 class="project-title">任务管理应用</h3>
-                <div class="project-tech">
-                  <span class="tech-tag">React</span>
-                  <span class="tech-tag">Node.js</span>
-                  <span class="tech-tag">MongoDB</span>
-                </div>
-              </div>
-              <p class="project-description">
-                全栈任务管理应用，支持团队协作、实时同步、数据可视化等功能。
-              </p>
-              <div class="project-links">
-                <a href="https://github.com" target="_blank" class="project-link">
-                  <span class="link-icon">🔗</span>
-                  GitHub
-                </a>
-                <a href="#" class="project-link">
-                  <span class="link-icon">🌐</span>
-                  预览
-                </a>
-              </div>
-            </div>
-            
-            <div class="project-card">
-              <div class="project-header">
-                <h3 class="project-title">电商平台前端</h3>
-                <div class="project-tech">
-                  <span class="tech-tag">Vue.js</span>
-                  <span class="tech-tag">Nuxt.js</span>
-                  <span class="tech-tag">SCSS</span>
-                </div>
-              </div>
-              <p class="project-description">
-                现代化电商平台前端，具有商品展示、购物车、支付集成等完整功能。
-              </p>
-              <div class="project-links">
-                <a href="https://github.com" target="_blank" class="project-link">
-                  <span class="link-icon">🔗</span>
-                  GitHub
-                </a>
-                <a href="#" class="project-link">
-                  <span class="link-icon">🌐</span>
-                  预览
-                </a>
-              </div>
-            </div>
+          <div class="blog-content">
+            <p>搭博客是看<a href="https://ovideros.github.io/" target="_blank" rel="noopener noreferrer">别人</a>搭了，然后觉得挺好玩的，就自己也搭了一个。（主题也是偷的）</p>
+            <p>期末考试偶遇八股课程，记了一堆笔记尝试上传。</p>
+            <p>目前还有很多 bug，有时间再修。</p>
           </div>
         </section>
 
@@ -167,26 +109,22 @@ import '../styles/global.css';
             <span class="title-icon">🎯</span>
             兴趣爱好
           </h2>
-          <div class="interests-grid">
-            <div class="interest-item">
-              <div class="interest-icon">📚</div>
-              <h3 class="interest-title">阅读</h3>
-              <p class="interest-description">喜欢阅读技术书籍和科幻小说，保持学习的习惯。</p>
+          <div class="interests-content">
+            <div class="interest-category">
+              <h3 class="category-title">🎵 音乐</h3>
+              <p>平时喜欢挂京吹系头像，伞木希美、久石奏、黄前久美子、甚至高坂丽奈。</p>
+              <p>说起来就是因为 高坂丽奈（Kasuga Reina）的名字和我的原 ID 很像，比起拼音还是用 <code>Reina</code> 更好看。</p>
             </div>
-            <div class="interest-item">
-              <div class="interest-icon">🎵</div>
-              <h3 class="interest-title">音乐</h3>
-              <p class="interest-description">热爱各种类型的音乐，编程时的最佳伴侣。</p>
+            
+            <div class="interest-category">
+              <h3 class="category-title">🎮 游戏</h3>
+              <p>最喜欢的游戏是 <a href="https://store.steampowered.com/app/504230/celeste/" target="_blank" rel="noopener noreferrer" class="game-link">celeste</a>，平常一般在 <a href="https://store.steampowered.com/app/646570/Slay_the_Spire/" target="_blank" rel="noopener noreferrer" class="game-link">爬塔</a>。</p>
             </div>
-            <div class="interest-item">
-              <div class="interest-icon">🏃‍♂️</div>
-              <h3 class="interest-title">运动</h3>
-              <p class="interest-description">定期跑步和健身，保持身心健康。</p>
-            </div>
-            <div class="interest-item">
-              <div class="interest-icon">📷</div>
-              <h3 class="interest-title">摄影</h3>
-              <p class="interest-description">用镜头记录生活中的美好瞬间。</p>
+            
+            <div class="interest-category">
+              <h3 class="category-title">💖 其他</h3>
+              <p>没有特别喜欢的东西，大部分都是了解的差不多，没有厨的角色，也没有想入一辈子的坑。</p>
+              <p>最喜欢的属性是 <span class="pink-text">粉毛</span>，但是好像最喜欢的角色都不是粉毛。</p>
             </div>
           </div>
         </section>
@@ -199,89 +137,24 @@ import '../styles/global.css';
           </h2>
           <div class="contact-content">
             <p class="contact-intro">
-              如果你有任何问题、建议或者想要合作，欢迎通过以下方式联系我：
+              如果你有任何问题、建议或者想要交流，欢迎通过以下方式联系我：
             </p>
             <div class="contact-methods">
-              <a href="mailto:your-email@example.com" class="contact-item">
-                <div class="contact-icon">📧</div>
-                <div class="contact-info">
-                  <h3 class="contact-title">邮箱</h3>
-                  <p class="contact-detail">your-email@example.com</p>
-                </div>
-              </a>
-              
-              <a href="https://github.com" target="_blank" class="contact-item">
-                <div class="contact-icon">🐙</div>
-                <div class="contact-info">
-                  <h3 class="contact-title">GitHub</h3>
-                  <p class="contact-detail">查看我的开源项目</p>
-                </div>
-              </a>
-              
-              <a href="https://twitter.com" target="_blank" class="contact-item">
-                <div class="contact-icon">🐦</div>
-                <div class="contact-info">
-                  <h3 class="contact-title">Twitter</h3>
-                  <p class="contact-detail">关注我的动态</p>
-                </div>
-              </a>
-              
-              <a href="https://linkedin.com" target="_blank" class="contact-item">
-                <div class="contact-icon">💼</div>
-                <div class="contact-info">
-                  <h3 class="contact-title">LinkedIn</h3>
-                  <p class="contact-detail">专业网络连接</p>
-                </div>
-              </a>
-            </div>
-          </div>
-        </section>
-
-        <!-- 时间线 -->
-        <section class="timeline-section">
-          <h2 class="section-title">
-            <span class="title-icon">⏰</span>
-            我的历程
-          </h2>
-          <div class="timeline">
-            <div class="timeline-item">
-              <div class="timeline-date">2024</div>
-              <div class="timeline-content">
-                <h3 class="timeline-title">开始写博客</h3>
-                <p class="timeline-description">
-                  创建了个人博客，开始分享技术心得和学习经验。
-                </p>
-              </div>
-            </div>
-            
-            <div class="timeline-item">
-              <div class="timeline-date">2023</div>
-              <div class="timeline-content">
-                <h3 class="timeline-title">全栈开发</h3>
-                <p class="timeline-description">
-                  深入学习后端技术，成为一名全栈开发者。
-                </p>
-              </div>
-            </div>
-            
-            <div class="timeline-item">
-              <div class="timeline-date">2022</div>
-              <div class="timeline-content">
-                <h3 class="timeline-title">前端进阶</h3>
-                <p class="timeline-description">
-                  掌握现代前端框架，参与多个商业项目开发。
-                </p>
-              </div>
-            </div>
-            
-            <div class="timeline-item">
-              <div class="timeline-date">2021</div>
-              <div class="timeline-content">
-                <h3 class="timeline-title">编程之路</h3>
-                <p class="timeline-description">
-                  开始学习编程，从 HTML/CSS 开始我的技术旅程。
-                </p>
-              </div>
+              {profileConfig.socialLinks.map((link) => (
+                <a href={link.url} target="_blank" rel="noopener noreferrer" class="contact-item">
+                  <div class="contact-icon">
+                    {link.icon.startsWith('http') || link.icon.startsWith('/') ? (
+                      <div class="contact-icon-svg" set:html={svgContents[link.icon]} />
+                    ) : (
+                      link.icon
+                    )}
+                  </div>
+                  <div class="contact-info">
+                    <h3 class="contact-title">{link.name}</h3>
+                    <p class="contact-detail">{link.name === 'Email' ? 'Ri_Nai_@outlook.com' : `查看我的${link.name}`}</p>
+                  </div>
+                </a>
+              ))}
             </div>
           </div>
         </section>
@@ -294,6 +167,12 @@ import '../styles/global.css';
   .about-page {
     padding: 2rem 0;
     min-height: calc(100vh - 4rem);
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
   }
 
   /* 英雄区域 */
@@ -379,6 +258,14 @@ import '../styles/global.css';
     font-weight: 300;
   }
 
+  .hero-subtitle code {
+    background: var(--bg-soft);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    color: var(--brand-primary);
+  }
+
   .hero-description {
     max-width: 600px;
     margin: 0 auto;
@@ -411,14 +298,122 @@ import '../styles/global.css';
     font-size: 1.8rem;
   }
 
-  /* 技术栈 */
-  .tech-categories {
+  /* 竞赛经历 */
+  .competition-timeline {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .competition-timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+    transform: translateX(-50%);
+  }
+
+  .competition-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3rem;
+    position: relative;
+  }
+
+  .competition-item:nth-child(odd) {
+    flex-direction: row;
+  }
+
+  .competition-item:nth-child(even) {
+    flex-direction: row-reverse;
+  }
+
+  .competition-year {
+    flex-shrink: 0;
+    width: 100px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--brand-primary);
+    background: var(--bg-primary);
+    border: 2px solid var(--brand-primary);
+    border-radius: var(--blog-radius-lg);
+    padding: 0.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .competition-content {
+    flex: 1;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-md);
+    padding: 2rem;
+    margin: 0 2rem;
+    transition: var(--blog-transition);
+  }
+
+  .competition-content:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--blog-shadow-2);
+    border-color: var(--brand-primary);
+  }
+
+  .competition-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+  }
+
+  .competition-result {
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .competition-result.bronze {
+    color: #cd7f32;
+  }
+
+  .competition-result.silver {
+    color: #c0c0c0;
+  }
+
+  /* 博客介绍 */
+  .blog-content {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-md);
+    padding: 2rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .blog-content a {
+    color: var(--brand-primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .blog-content a:hover {
+    text-decoration: underline;
+  }
+
+  .blog-content p {
+    margin: 1rem 0;
+  }
+
+  /* 兴趣爱好 */
+  .interests-content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
   }
 
-  .tech-category {
+  .interest-category {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--blog-radius-md);
@@ -426,7 +421,7 @@ import '../styles/global.css';
     transition: var(--blog-transition);
   }
 
-  .tech-category:hover {
+  .interest-category:hover {
     transform: translateY(-4px);
     box-shadow: var(--blog-shadow-2);
     border-color: var(--brand-primary);
@@ -436,154 +431,36 @@ import '../styles/global.css';
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-
-  .tech-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: center;
-  }
-
-  .tech-item {
-    background: var(--bg-soft);
-    color: var(--text-primary);
-    padding: 0.5rem 1rem;
-    border-radius: var(--blog-radius-lg);
-    font-size: 0.9rem;
-    font-weight: 500;
-    border: 1px solid var(--border-color);
-    transition: var(--blog-transition);
-  }
-
-  .tech-item:hover {
-    background: var(--brand-lighter);
-    color: var(--brand-primary);
-    border-color: var(--brand-primary);
-    transform: translateY(-2px);
-  }
-
-  /* 项目经历 */
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2rem;
-  }
-
-  .project-card {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--blog-radius-md);
-    padding: 2rem;
-    transition: var(--blog-transition);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .project-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--blog-shadow-3);
-    border-color: var(--brand-primary);
-  }
-
-  .project-header {
     margin-bottom: 1rem;
   }
 
-  .project-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-  }
-
-  .project-tech {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .tech-tag {
-    background: var(--brand-lighter);
-    color: var(--brand-primary);
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--blog-radius-sm);
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
-
-  .project-description {
+  .interest-category p {
     color: var(--text-secondary);
     line-height: 1.6;
-    margin-bottom: 1.5rem;
-    flex: 1;
+    margin: 0.75rem 0;
   }
 
-  .project-links {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .project-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+  .interest-category code {
+    background: var(--bg-soft);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Fira Code', 'Consolas', monospace;
     color: var(--brand-primary);
+  }
+
+  .pink-text {
+    color: #ff69b4;
+    font-weight: 600;
+  }
+
+  .game-link {
+    color: #00bcd4;
     text-decoration: none;
     font-weight: 500;
-    transition: var(--blog-transition);
   }
 
-  .project-link:hover {
-    color: var(--brand-dark);
-    transform: translateX(4px);
-  }
-
-  .link-icon {
-    font-size: 0.9rem;
-  }
-
-  /* 兴趣爱好 */
-  .interests-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-  }
-
-  .interest-item {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--blog-radius-md);
-    padding: 2rem;
-    text-align: center;
-    transition: var(--blog-transition);
-  }
-
-  .interest-item:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--blog-shadow-2);
-    border-color: var(--brand-primary);
-  }
-
-  .interest-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    display: block;
-  }
-
-  .interest-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-  }
-
-  .interest-description {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin: 0;
+  .game-link:hover {
+    text-decoration: underline;
   }
 
   /* 联系方式 */
@@ -627,6 +504,31 @@ import '../styles/global.css';
   .contact-icon {
     font-size: 2.5rem;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .contact-icon-svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    transition: var(--blog-transition);
+  }
+
+  .contact-icon-svg svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+    stroke: currentColor;
+  }
+
+  .contact-item:hover .contact-icon-svg {
+    color: var(--brand-primary);
+    transform: scale(1.1);
   }
 
   .contact-info {
@@ -643,82 +545,6 @@ import '../styles/global.css';
 
   .contact-detail {
     color: var(--text-secondary);
-    margin: 0;
-  }
-
-  /* 时间线 */
-  .timeline {
-    max-width: 800px;
-    margin: 0 auto;
-    position: relative;
-  }
-
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--border-color);
-    transform: translateX(-50%);
-  }
-
-  .timeline-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 3rem;
-    position: relative;
-  }
-
-  .timeline-item:nth-child(odd) {
-    flex-direction: row;
-  }
-
-  .timeline-item:nth-child(even) {
-    flex-direction: row-reverse;
-  }
-
-  .timeline-date {
-    flex-shrink: 0;
-    width: 100px;
-    text-align: center;
-    font-weight: 700;
-    color: var(--brand-primary);
-    background: var(--bg-primary);
-    border: 2px solid var(--brand-primary);
-    border-radius: var(--blog-radius-lg);
-    padding: 0.5rem;
-    position: relative;
-    z-index: 2;
-  }
-
-  .timeline-content {
-    flex: 1;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--blog-radius-md);
-    padding: 2rem;
-    margin: 0 2rem;
-    transition: var(--blog-transition);
-  }
-
-  .timeline-content:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--blog-shadow-2);
-    border-color: var(--brand-primary);
-  }
-
-  .timeline-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-  }
-
-  .timeline-description {
-    color: var(--text-secondary);
-    line-height: 1.6;
     margin: 0;
   }
 
@@ -739,16 +565,8 @@ import '../styles/global.css';
       justify-content: flex-start;
     }
 
-    .tech-categories {
+    .interests-content {
       grid-template-columns: 1fr;
-    }
-
-    .projects-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .interests-grid {
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
 
     .contact-methods {
@@ -759,21 +577,21 @@ import '../styles/global.css';
       padding: 1.5rem;
     }
 
-    /* 时间线响应式 */
-    .timeline::before {
+    /* 竞赛时间线响应式 */
+    .competition-timeline::before {
       left: 30px;
     }
 
-    .timeline-item {
+    .competition-item {
       flex-direction: row !important;
       padding-left: 80px;
     }
 
-    .timeline-item:nth-child(even) {
+    .competition-item:nth-child(even) {
       flex-direction: row !important;
     }
 
-    .timeline-date {
+    .competition-year {
       position: absolute;
       left: 0;
       width: 60px;
@@ -781,7 +599,7 @@ import '../styles/global.css';
       padding: 0.25rem;
     }
 
-    .timeline-content {
+    .competition-content {
       margin: 0;
       flex: 1;
     }
@@ -797,10 +615,9 @@ import '../styles/global.css';
       height: 100px;
     }
 
-    .project-card,
-    .tech-category,
-    .interest-item,
-    .timeline-content {
+    .interest-category,
+    .competition-content,
+    .blog-content {
       padding: 1.5rem;
     }
 

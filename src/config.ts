@@ -19,19 +19,13 @@ export interface SiteConfig {
   postsPerPage: number;
 }
 
-export const siteConfig: SiteConfig = {
-  title: '我的博客',
-  subtitle: '基于Astro的现代博客主题',
-  lang: 'zh-CN',
-  createAt: new Date('2024-01-01'),
-  postsPerPage: 10,
-};
+
 
 export const profileConfig: ProfileConfig = {
   avatar: '/imgs/avatar.jpg',
-  name: 'Reina',
-  bio: '如果努力的尽头是奇迹',
-  author: 'Reina',
+  name: 'Ri-Nai',
+  bio: '神明大人，为什么要教会我打开鸟笼的方法',
+  author: 'Ri-Nai',
   socialLinks: [
     {
       name: 'GitHub',
