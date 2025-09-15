@@ -240,9 +240,6 @@ const { class: className, basePath = "" } = Astro.props;
           figure.style.flexGrow = aspectRatio.toString();
           figure.style.flexBasis = "0";
           
-          // 确保图片在移动端正确显示
-          figure.style.minHeight = "200px";
-          figure.style.maxHeight = "400px";
         }
       };
 
