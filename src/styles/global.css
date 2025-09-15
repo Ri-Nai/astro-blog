@@ -307,7 +307,6 @@ code {
   font-weight: 500;
   border: 1px solid var(--border-color);
   cursor: pointer;
-  user-select: all;
   transition: var(--blog-transition);
   position: relative;
 }
@@ -324,36 +323,44 @@ code {
   box-shadow: var(--blog-shadow-1);
 }
 
-/* 复制提示 - 只在悬停时显示 */
-:not(pre) > code::after {
-  content: '点击复制';
-  position: absolute;
-  top: -2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--text-primary);
-  color: var(--bg-primary);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--blog-radius-sm);
-  font-size: 0.75rem;
-  font-weight: 500;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: var(--blog-transition);
-  z-index: 1000;
-}
-
-:not(pre) > code:hover::after {
-  opacity: 1;
-}
-
 /* 复制成功提示 - 点击后强制显示 */
 :not(pre) > code.copied::after {
   content: '已复制!' !important;
   background: #10b981 !important;
   color: white !important;
   opacity: 1 !important;
+  position: absolute;
+  top: -2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--blog-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  z-index: 1000;
+  animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  85% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
 }
 
 /* Astro Code 主题切换支持 */

@@ -332,6 +332,61 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       // 对于动态加载的内容，可以提供重新初始化的方法
       (window as any).initCodeCopyButtons = initCodeCopyButtons;
 
+      // 行内代码点击复制功能
+      function initInlineCodeCopy() {
+        const inlineCodes = document.querySelectorAll(':not(pre) > code');
+        
+        inlineCodes.forEach(code => {
+          // 跳过已经有事件监听器的代码块
+          if (code.hasAttribute('data-copy-initialized')) return;
+          
+          code.addEventListener('click', async (event) => {
+            const target = event.currentTarget;
+            
+            try {
+              // 复制文本到剪贴板
+              await navigator.clipboard.writeText(target.textContent || '');
+              
+              // 添加复制成功样式
+              target.classList.add('copied');
+              
+              // 2秒后恢复原始状态
+              setTimeout(() => {
+                target.classList.remove('copied');
+              }, 2000);
+              
+            } catch (err) {
+              // 如果剪贴板API不可用，使用传统方法
+              const textArea = document.createElement('textarea');
+              textArea.value = target.textContent || '';
+              document.body.appendChild(textArea);
+              textArea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textArea);
+              
+              // 显示复制成功样式
+              target.classList.add('copied');
+              setTimeout(() => {
+                target.classList.remove('copied');
+              }, 2000);
+            }
+          });
+          
+          // 标记为已初始化
+          code.setAttribute('data-copy-initialized', 'true');
+        });
+      }
+
+      // 页面加载完成后初始化行内代码复制功能
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initInlineCodeCopy);
+      } else {
+        initInlineCodeCopy();
+      }
+
+      // 对于动态加载的内容，可以提供重新初始化的方法
+      (window as any).initInlineCodeCopy = initInlineCodeCopy;
+
       // 返回顶部功能
       function initBackToTop() {
         const backToTopButton = document.getElementById('back-to-top');
