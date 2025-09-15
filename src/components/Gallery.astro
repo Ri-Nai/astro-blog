@@ -15,6 +15,8 @@ const { class: className, basePath = "" } = Astro.props;
 <script>
   // 图片画廊处理脚本
   class AstroGallery {
+    private processedImages: Set<HTMLElement>;
+
     constructor() {
       this.processedImages = new Set(); // 记录已处理的图片
       this.init();
@@ -50,7 +52,7 @@ const { class: className, basePath = "" } = Astro.props;
       contentAreas.forEach((container) => {
         // 首先清理已存在的gallery容器
         this.cleanupExistingGalleries(container as HTMLElement);
-        
+
         // 然后处理图片路径优化
         this.optimizeImagePaths(container as HTMLElement);
         // 最后创建画廊
@@ -60,7 +62,8 @@ const { class: className, basePath = "" } = Astro.props;
 
     cleanupExistingGalleries(container: HTMLElement) {
       // 移除所有已存在的gallery容器，但保留图片
-      const existingContainers = container.querySelectorAll(".gallery-container");
+      const existingContainers =
+        container.querySelectorAll(".gallery-container");
       existingContainers.forEach((container) => {
         // 将容器内的所有figure移回父元素
         const figures = container.querySelectorAll("figure.gallery-image");
@@ -74,7 +77,9 @@ const { class: className, basePath = "" } = Astro.props;
       });
 
       // 移除所有已处理的图片标记
-      const processedImages = container.querySelectorAll(".gallery-image-processed");
+      const processedImages = container.querySelectorAll(
+        ".gallery-image-processed",
+      );
       processedImages.forEach((img) => {
         img.classList.remove("gallery-image-processed");
         // 移除figure包装器
@@ -89,7 +94,8 @@ const { class: className, basePath = "" } = Astro.props;
       });
 
       // 清理gallery-paragraph标记
-      const galleryParagraphs = container.querySelectorAll(".gallery-paragraph");
+      const galleryParagraphs =
+        container.querySelectorAll(".gallery-paragraph");
       galleryParagraphs.forEach((p) => {
         p.classList.remove("gallery-paragraph");
       });
@@ -97,14 +103,30 @@ const { class: className, basePath = "" } = Astro.props;
 
     optimizeImagePaths(container: HTMLElement) {
       const basePath = "${basePath}";
-      if (!basePath) return;
+      const currentPath = window.location.pathname;
+
+      if (!basePath && !currentPath.includes("/blog/")) return;
 
       const images = container.querySelectorAll("img");
       images.forEach((img) => {
         const src = img.getAttribute("src");
         if (src && !src.startsWith("/") && !src.startsWith("http")) {
-          // 如果是相对路径，添加basePath
-          img.setAttribute("src", `${basePath}/${src}`);
+          let newSrc = src;
+
+          // 如果有basePath，使用basePath
+          if (basePath) {
+            newSrc = `${basePath}/${src}`;
+          } else if (currentPath.includes("/blog/")) {
+            // 自动推断博客图片路径
+            const pathParts = currentPath.split("/");
+            const blogIndex = pathParts.indexOf("blog");
+            if (blogIndex !== -1 && pathParts.length > blogIndex + 1) {
+              const blogPath = pathParts.slice(blogIndex + 1).join("/");
+              newSrc = `/imgs/blog/${blogPath}/${src}`;
+            }
+          }
+
+          img.setAttribute("src", newSrc);
         }
       });
     }
@@ -145,8 +167,10 @@ const { class: className, basePath = "" } = Astro.props;
 
     processImageComponents(container: HTMLElement) {
       // 查找所有Image组件生成的图片
-      const imageComponents = container.querySelectorAll("img[data-image-component='true']");
-      
+      const imageComponents = container.querySelectorAll(
+        "img[data-image-component='true']",
+      );
+
       imageComponents.forEach((img) => {
         if (!img.closest(".gallery-image")) {
           // 为Image组件生成的图片创建包装器
@@ -205,7 +229,7 @@ const { class: className, basePath = "" } = Astro.props;
         figure.style.display = "flex";
         figure.style.alignItems = "center";
         figure.style.justifyContent = "center";
-        
+
         const loadingText = document.createElement("div");
         loadingText.textContent = "加载中...";
         loadingText.style.color = "var(--text-tertiary)";
@@ -239,7 +263,6 @@ const { class: className, basePath = "" } = Astro.props;
           // 设置flex-grow为宽高比，这样宽度会按比例分配
           figure.style.flexGrow = aspectRatio.toString();
           figure.style.flexBasis = "0";
-          
         }
       };
 
@@ -274,7 +297,12 @@ const { class: className, basePath = "" } = Astro.props;
           // 第一个figure
           currentGallery = [fig];
           console.log("Gallery: Starting new gallery");
-        } else if (this.areFiguresAdjacent(currentGallery[currentGallery.length - 1], fig)) {
+        } else if (
+          this.areFiguresAdjacent(
+            currentGallery[currentGallery.length - 1],
+            fig,
+          )
+        ) {
           // 检查是否相邻（包括跳过空行的情况）
           currentGallery.push(fig);
           console.log(
@@ -310,47 +338,47 @@ const { class: className, basePath = "" } = Astro.props;
     areFiguresAdjacent(fig1: HTMLElement, fig2: HTMLElement): boolean {
       // 检查两个figure之间是否有空行或GalleryBreak组件
       let current = fig1.nextElementSibling;
-      
+
       while (current) {
         if (current === fig2) {
           return true; // 找到了fig2，说明相邻
         }
-        
+
         // 检查是否是GalleryBreak组件
-        if (current.classList?.contains('gallery-break')) {
+        if (current.classList?.contains("gallery-break")) {
           return false; // 遇到分割标记，不相邻
         }
-        
+
         // 跳过空行（空的p标签、br标签、空白文本节点等）
         if (this.isEmptyElement(current)) {
           current = current.nextElementSibling;
           continue;
         }
-        
+
         // 如果遇到非空元素且不是fig2，说明不相邻
         break;
       }
-      
+
       return false;
     }
 
     isEmptyElement(element: Element): boolean {
       // 检查元素是否为空（只包含空白字符）
-      if (element.tagName === 'P') {
+      if (element.tagName === "P") {
         const textContent = element.textContent?.trim() || "";
         return textContent === "";
       }
-      
-      if (element.tagName === 'BR') {
+
+      if (element.tagName === "BR") {
         return true;
       }
-      
+
       // 检查是否是空白文本节点
       if (element.nodeType === Node.TEXT_NODE) {
         const textContent = element.textContent?.trim() || "";
         return textContent === "";
       }
-      
+
       return false;
     }
 
