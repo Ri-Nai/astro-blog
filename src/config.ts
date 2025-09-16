@@ -4,6 +4,7 @@ export interface ProfileConfig {
   name: string;
   bio: string;
   author: string;
+  favicon: string;
   socialLinks: {
     name: string;
     url: string;
@@ -50,6 +51,7 @@ export const profileConfig: ProfileConfig = {
   name: 'Ri-Nai',
   bio: '神明大人，为什么要教会我打开鸟笼的方法',
   author: 'Ri-Nai',
+  favicon: '/favicon.png',
   socialLinks: [
     {
       name: 'GitHub',
