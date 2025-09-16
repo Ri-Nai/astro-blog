@@ -1,18 +1,22 @@
 ---
 import { getBasePath, getAssetPath } from '../utils/pathUtils';
+import ImagePreview from './ImagePreview.astro';
 
 // Gallery.astro - 图片画廊组件
 export interface Props {
   class?: string;
   basePath?: string; // 图片基础路径
+  enablePreview?: boolean; // 是否启用图片预览功能
 }
 
-const { class: className, basePath = getBasePath() } = Astro.props;
+const { class: className, basePath = getBasePath(), enablePreview = true } = Astro.props;
 ---
 
 <div class={`gallery ${className || ""}`}>
   <slot />
 </div>
+
+{enablePreview && <ImagePreview />}
 
 <script>
   // 图片画廊处理脚本
@@ -225,6 +229,20 @@ const { class: className, basePath = getBasePath() } = Astro.props;
         const figcaption = document.createElement("figcaption");
         figcaption.textContent = img.alt;
         figure.appendChild(figcaption);
+      }
+
+      // 确保图片预览功能正常工作
+      // 等待图片加载完成后再设置预览
+      const setupPreview = () => {
+        if (window.imagePreviewManager) {
+          window.imagePreviewManager.enablePreview(img);
+        }
+      };
+
+      if (img.complete && img.naturalWidth > 0) {
+        setupPreview();
+      } else {
+        img.addEventListener('load', setupPreview);
       }
 
       // 添加图片加载状态指示
