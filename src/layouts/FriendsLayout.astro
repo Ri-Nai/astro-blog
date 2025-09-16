@@ -1,40 +1,128 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import Navigation from "../components/Navigation.astro";
-import { friendsConfig } from "../config";
-import { getAssetPath } from "../utils/pathUtils";
-import "../styles/global.css";
+import BaseLayout from './BaseLayout.astro';
+import { getAssetPath } from '../utils/pathUtils';
+import { friendsConfig } from '../config';
+import { markdown } from '@astropub/md';
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description?: string;
+  hero?: {
+    title: string;
+    subtitle?: string;
+    description?: string | string[];
+  };
+  sections?: Array<{
+    id: string;
+    title: string;
+    icon?: string;
+    type: 'text' | 'friends';
+    content?: any;
+    renderedContent?: string;
+  }>;
+}
+
+const { title, description, hero, sections } = Astro.props;
+
+// 预处理 hero description 和 subtitle
+let renderedHeroDescription = null;
+let renderedHeroSubtitle = null;
+
+if (hero?.description) {
+  if (Array.isArray(hero.description)) {
+    renderedHeroDescription = await Promise.all(
+      hero.description.map(async (desc) => await markdown(desc))
+    );
+  } else {
+    renderedHeroDescription = await markdown(hero.description);
+  }
+}
+
+if (hero?.subtitle) {
+  renderedHeroSubtitle = await markdown(hero.subtitle);
+}
+
+// 预处理 sections，渲染 Markdown 内容
+const processedSections = await Promise.all(
+  sections?.map(async (section) => {
+    const processedSection = { ...section };
+
+    // 处理 text 类型的 content
+    if (section.type === 'text' && section.content) {
+      const content = typeof section.content === 'string'
+        ? section.content
+        : section.content.text;
+      if (content) {
+        processedSection.renderedContent = await markdown(content);
+      }
+    }
+
+    // 处理 friends 类型的 friends description
+    if (section.type === 'friends' && section.content?.friends) {
+      processedSection.content = {
+        ...section.content,
+        friends: await Promise.all(
+          section.content.friends.map(async (friend: any) => {
+            if (friend.description) {
+              return {
+                ...friend,
+                renderedDescription: await markdown(friend.description)
+              };
+            }
+            return friend;
+          })
+        )
+      };
+    }
+
+    return processedSection;
+  }) || []
+);
 ---
 
-<BaseLayout
-  title="友链 - Ri-Nai 的博客"
-  description="我的朋友们和他们的精彩博客"
->
-  <Navigation />
-  <main>
-    <div class="friends-page">
-      <div class="container">
-        <!-- 页面标题 -->
+<BaseLayout title={title} description={description}>
+  <slot name="navigation" />
+  <div class="friends-content">
+    <div class="container">
+      <!-- Hero Section -->
+      {hero && (
         <section class="hero-section">
           <div class="hero-content">
-            <h1 class="hero-title">🔗 友链</h1>
-            <p class="hero-subtitle">我的朋友们和他们的精彩博客</p>
-            <div class="hero-description">
-              <p>这里收集了一些我关注的朋友们的博客和网站</p>
-              <p>如果你也想交换友链，欢迎联系我！</p>
-            </div>
+            <h1 class="hero-title">{hero.title}</h1>
+            {renderedHeroSubtitle && (
+              <div class="hero-subtitle" set:html={renderedHeroSubtitle} />
+            )}
+            {renderedHeroDescription && (
+              <div class="hero-description">
+                {Array.isArray(renderedHeroDescription) ? (
+                  renderedHeroDescription.map((desc) => <div set:html={desc} />)
+                ) : (
+                  <div set:html={renderedHeroDescription} />
+                )}
+              </div>
+            )}
           </div>
         </section>
+      )}
 
-        <!-- 友链列表 -->
-        <section class="friends-section">
+      <!-- Dynamic Sections -->
+      {processedSections?.map((section) => (
+        <section class={`${section.type}-section`}>
           <h2 class="section-title">
-            <span class="title-icon">👥</span>
-            我的朋友
+            {section.icon && <span class="title-icon">{section.icon}</span>}
+            {section.title}
           </h2>
-          <div class="friends-grid">
-            {
-              friendsConfig.friends.map((friend) => (
+
+          {section.type === 'text' && section.renderedContent && (
+            <div class="text-content">
+              <div set:html={section.renderedContent} />
+            </div>
+          )}
+
+          {section.type === 'friends' && section.content && (
+            <div class="friends-grid">
+              {section.content.friends?.map((friend: any) => (
                 <a
                   href={friend.url}
                   target="_blank"
@@ -51,46 +139,46 @@ import "../styles/global.css";
                   </div>
                   <div class="friend-info">
                     <h3 class="friend-name">{friend.name}</h3>
-                    <p class="friend-description">{friend.description}</p>
+                    {friend.renderedDescription && (
+                      <div class="friend-description" set:html={friend.renderedDescription} />
+                    )}
                     <div class="friend-tags">
-                      {friend.tags.map((tag) => (
+                      {friend.tags.map((tag: string) => (
                         <span class="friend-tag">{tag}</span>
                       ))}
                     </div>
                   </div>
                   <div class="friend-link-icon">🔗</div>
                 </a>
-              ))
-            }
-          </div>
+              ))}
+            </div>
+          )}
         </section>
-      </div>
+      ))}
+
+      <!-- Markdown content slot -->
+      <slot />
     </div>
-  </main>
+  </div>
 </BaseLayout>
 
 <style>
-  .friends-page {
+  .friends-content {
     padding: 2rem 0;
-    min-height: calc(100vh - 4rem);
   }
 
   .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 1rem;
   }
 
-  /* 英雄区域 */
+  /* Hero Section */
   .hero-section {
     text-align: center;
-    padding: 4rem 0;
+    padding: 3rem 0;
     margin-bottom: 4rem;
-    background: linear-gradient(
-      135deg,
-      var(--bg-soft) 0%,
-      var(--bg-primary) 100%
-    );
+    background: linear-gradient(135deg, var(--bg-soft) 0%, var(--bg-primary) 100%);
     border-radius: 24px;
     border: 1px solid var(--border-color);
     position: relative;
@@ -103,7 +191,7 @@ import "../styles/global.css";
   }
 
   .hero-title {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 700;
     color: var(--brand-primary);
     margin-bottom: 1rem;
@@ -128,7 +216,7 @@ import "../styles/global.css";
     margin: 0.5rem 0;
   }
 
-  /* 通用区域样式 */
+  /* Section Styles */
   section {
     margin-bottom: 4rem;
   }
@@ -149,7 +237,31 @@ import "../styles/global.css";
     font-size: 1.8rem;
   }
 
-  /* 友链网格 */
+  /* Text Content */
+  .text-content {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-md);
+    padding: 2rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .text-content a {
+    color: var(--brand-primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .text-content a:hover {
+    text-decoration: underline;
+  }
+
+  .text-content p {
+    margin: 1rem 0;
+  }
+
+  /* Friends Grid */
   .friends-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -253,91 +365,42 @@ import "../styles/global.css";
     transition: var(--blog-transition);
   }
 
-  /* 申请友链区域 */
-  .apply-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: start;
-  }
-
-  .apply-info,
-  .my-info {
+  /* Markdown Content */
+  .markdown-content {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--blog-radius-md);
     padding: 2rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
   }
 
-  .apply-info h3,
-  .my-info h3 {
+  .markdown-content h2 {
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0 0 1.5rem 0;
+    margin: 2rem 0 1rem 0;
   }
 
-  .apply-info p {
-    color: var(--text-secondary);
-    line-height: 1.6;
+  .markdown-content h2:first-child {
+    margin-top: 0;
+  }
+
+  .markdown-content p {
     margin: 1rem 0;
   }
 
-  .apply-requirements {
-    list-style: none;
-    padding: 0;
-    margin: 1.5rem 0;
-  }
-
-  .apply-requirements li {
-    color: var(--text-secondary);
-    margin: 0.75rem 0;
-    padding-left: 0;
-  }
-
-  .contact-links {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-
-  .contact-link {
-    background: var(--brand-primary);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--blog-radius-md);
+  .markdown-content a {
+    color: var(--brand-primary);
     text-decoration: none;
     font-weight: 500;
-    transition: var(--blog-transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
   }
 
-  .contact-link:hover {
-    background: var(--brand-light);
-    transform: translateY(-2px);
-    box-shadow: var(--blog-shadow-1);
+  .markdown-content a:hover {
+    text-decoration: underline;
   }
 
-  .my-info-card {
-    background: var(--bg-soft);
-    border-radius: var(--blog-radius-sm);
-    padding: 1.5rem;
-  }
-
-  .my-info-item {
-    margin: 1rem 0;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-
-  .my-info-item strong {
-    color: var(--text-primary);
-    font-weight: 600;
-  }
-
-  /* 响应式设计 */
+  /* Responsive Design */
   @media (max-width: 768px) {
     .hero-title {
       font-size: 2rem;
@@ -369,15 +432,6 @@ import "../styles/global.css";
       white-space: normal;
       text-align: center;
     }
-
-    .apply-content {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
-
-    .contact-links {
-      flex-direction: column;
-    }
   }
 
   @media (max-width: 480px) {
@@ -385,14 +439,13 @@ import "../styles/global.css";
       font-size: 1.75rem;
     }
 
-    .friend-card,
-    .apply-info,
-    .my-info {
-      padding: 1.5rem;
+    .friend-card {
+      padding: 1rem;
     }
 
-    .my-info-card {
-      padding: 1rem;
+    .friend-avatar {
+      width: 50px;
+      height: 50px;
     }
   }
 </style>
