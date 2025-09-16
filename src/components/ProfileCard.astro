@@ -1,23 +1,10 @@
 ---
 import { profileConfig } from "../config";
 import { getNavPath, getAssetPath } from "../utils/pathUtils";
+import { getSvgContents } from "../utils/svgUtils";
 
-// 动态导入SVG文件
-const svgContents: Record<string, string> = {};
-
-// 根据config中的socialLinks动态导入SVG
-for (const link of profileConfig.socialLinks) {
-  if (link.icon.startsWith('/icons/')) {
-    try {
-      // 动态导入SVG文件
-      const svgModule = await import(`/public${link.icon}?raw`);
-      svgContents[link.icon] = svgModule.default;
-    } catch (error) {
-      console.error(`Failed to import SVG: ${link.icon}`, error);
-      svgContents[link.icon] = '';
-    }
-  }
-}
+// 根据配置获取 SVG 内容
+const svgContents = getSvgContents(profileConfig.socialLinks);
 ---
 
 <div class="profile-card">
