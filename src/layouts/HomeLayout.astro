@@ -1,15 +1,41 @@
 ---
+import BaseLayout from "./BaseLayout.astro";
+import ArticleList from "../components/ArticleList.astro";
+import Navigation from "../components/Navigation.astro";
 import { getCollection } from "astro:content";
-import ArticleList from "./ArticleList.astro";
 import { profileConfig } from "../config";
 import { getAssetPath } from "../utils/pathUtils";
 import { getSvgContents } from "../utils/svgUtils";
+import "../styles/global.css";
 
+export interface Props {
+  title?: string;
+  description?: string;
+  hero?: {
+    title?: string;
+    subtitle?: string;
+    avatar?: string;
+  };
+  showRecentPosts?: boolean;
+  recentPostsLimit?: number;
+}
+
+const {
+  title = "首页 - 我的博客",
+  description,
+  hero = {
+    avatar: "/imgs/avatar.jpg"
+  },
+  showRecentPosts = true,
+  recentPostsLimit = 6
+} = Astro.props;
+
+// 获取博客文章数据
 const allPosts = await getCollection("blog");
 const visiblePosts = allPosts.filter((post) => !post.data.hidden);
 const recentPosts = visiblePosts
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 6);
+  .slice(0, recentPostsLimit);
 
 const allTags = [...new Set(visiblePosts.flatMap((post) => post.data.tags))];
 
@@ -26,66 +52,75 @@ const tagCounts = allTags.reduce(
 
 // 根据配置获取 SVG 内容
 const svgContents = getSvgContents(profileConfig.socialLinks);
-
 ---
 
-<div class="blog-home">
-  <!-- 博客头部横幅 -->
-  <section class="hero-section">
-    <div class="hero-content">
-      <div class="hero-avatar">
-        <img
-          src={getAssetPath("/imgs/avatar.jpg")}
-          alt="博主头像"
-          class="avatar-image"
-          loading="eager"
-          onerror={`this.src='${getAssetPath("/imgs/default-avatar.svg")}'`}
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main>
+    <div class="blog-home">
+      <!-- 博客头部横幅 -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-avatar">
+            <img
+              src={getAssetPath(hero?.avatar || "/imgs/avatar.jpg")}
+              alt="博主头像"
+              class="avatar-image"
+              loading="eager"
+              onerror={`this.src='${getAssetPath("/imgs/default-avatar.svg")}'`}
+            />
+          </div>
+          <h1 class="hero-title">{hero?.title}</h1>
+          <p class="hero-subtitle">{hero?.subtitle}</p>
+
+          <!-- 社交链接 -->
+          <div class="hero-social">
+            {
+              profileConfig.socialLinks.map((link) => (
+                <a
+                  href={link.url}
+                  title={link.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="social-link"
+                >
+                  <span class="social-icon">
+                    {link.icon.startsWith('http') || link.icon.startsWith('/') ? (
+                      <div class="social-icon-svg" set:html={svgContents[link.icon]} />
+                    ) : (
+                      link.icon
+                    )}
+                  </span>
+                  {link.name}
+                </a>
+              ))
+            }
+          </div>
+        </div>
+        <div class="hero-decoration">
+          <div class="decoration-circle circle-1"></div>
+          <div class="decoration-circle circle-2"></div>
+          <div class="decoration-circle circle-3"></div>
+        </div>
+      </section>
+
+      <!-- 最新文章 -->
+      {showRecentPosts && (
+        <ArticleList
+          posts={recentPosts}
+          title="📝 最新文章"
+          limit={recentPostsLimit}
+          showViewAll={true}
+          viewAllLink="/blog"
+          showHeroImage={true}
         />
-      </div>
-      <h1 class="hero-title">欢迎来到 Ri-Nai 的博客</h1>
-      <p class="hero-subtitle">软件工程大二在读，前 OIer、ACMer</p>
+      )}
 
-      <!-- 社交链接 -->
-      <div class="hero-social">
-        {
-          profileConfig.socialLinks.map((link) => (
-            <a
-              href={link.url}
-              title={link.name}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="social-link"
-            >
-              <span class="social-icon">
-                {link.icon.startsWith('http') || link.icon.startsWith('/') ? (
-                  <div class="social-icon-svg" set:html={svgContents[link.icon]} />
-                ) : (
-                  link.icon
-                )}
-              </span>
-              {link.name}
-            </a>
-          ))
-        }
-      </div>
+      <!-- 自定义内容插槽 -->
+      <slot />
     </div>
-    <div class="hero-decoration">
-      <div class="decoration-circle circle-1"></div>
-      <div class="decoration-circle circle-2"></div>
-      <div class="decoration-circle circle-3"></div>
-    </div>
-  </section>
-
-  <!-- 最新文章 -->
-  <ArticleList
-    posts={recentPosts}
-    title="📝 最新文章"
-    limit={6}
-    showViewAll={true}
-    viewAllLink="/blog"
-    showHeroImage={true}
-  />
-</div>
+  </main>
+</BaseLayout>
 
 <style>
   .blog-home {
