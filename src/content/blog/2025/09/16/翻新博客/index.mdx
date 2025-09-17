@@ -1,0 +1,54 @@
+---
+title: "翻新博客"
+description: "从 Hugo 迁移到 Astro"
+pubDate: "2025-09-16T20:37:56.996+08:00"
+updatedDate: "2025-09-16T20:37:56.996+08:00"
+# heroImage: /imgs/blog/2025/09/16/翻新博客/cover.jpg
+math: false
+hidden: false
+# category:
+# tags:
+---
+import Image from '/src/components/Image.astro';
+
+# 翻新博客
+
+如你所见，你点进我的博客发现我换了博客的主题，也换了博客引擎
+
+## 再见 Hugo
+
+Hugo 感觉其实还挺好的，主要就是，自定义比较差，而且 Hugo 的语法有点恶心，实现一些比较神秘的功能会写的比较恶心。
+
+而且我不太喜欢之前的那个 [hugo-stack](https://github.com/CaiJimmy/hugo-theme-stack) 的样式了，可能是有点素了。
+
+虽然当时改了比较多，还是比较不舍得的。
+
+## Vitepress
+
+上个学期以来一直在用 Vitepress 记笔记，主题是偷的[typst 中文社区导航](https://typst-doc-cn.github.io/guide/)的。
+
+之前还是考虑过拿 Vitepress 当博客引擎的，但是感觉太麻烦了，很难去读取每个页面的 frontmatter，我之前实现的解决方案是，每次 build 的时候，先调用 js 脚本去把每个文章的数据存到一个 data.js，感觉有点在造轮子，遂放弃。
+
+Vitepress 还是不错的，可以很轻松的去生成一个简单的 book 类型的网站，在那方面已经是傻瓜式的了，但是拿来当博客有点怪怪的。
+
+## Astro
+
+见过一些很漂亮的博客主题，于是想着自己也做一个。
+
+于是就变成了，让 AI 一步步步步搓出来了这个主题
+
+偷了特别多的主题，比如说[hugo-stack](https://github.com/CaiJimmy/hugo-theme-stack)里我非常喜欢的“图廊”功能，[typst 中文社区导航](https://typst-doc-cn.github.io/guide/)的颜色主题。最终效果还是很满意的。
+
+感谢cursor🙏
+
+<Image src="写代码就是这样吧.png" alt="写代码就是这样吧" />
+
+## 后记
+
+评论区还没做，不会还是要用 giscus 吧。
+
+不过别的我也不太会用。。。
+
+其实迁移博客这件事在暑假去杭州前就已经想过了，但是暑假太懒了一直没做，然后经过了一个小学期之后终于是有时间做这件事了。
+
+也感谢林处的提醒，你坝终于是做出来了。
