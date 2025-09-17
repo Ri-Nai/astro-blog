@@ -1,8 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-import AboutLayout from '../layouts/AboutLayout.astro';
-import FriendsLayout from '../layouts/FriendsLayout.astro';
-import Navigation from '../components/Navigation.astro';
+import AboutLayout from '@theme/layouts/AboutLayout.astro';
+import FriendsLayout from '@theme/layouts/FriendsLayout.astro';
+import Navigation from '@theme/components/Navigation.astro';
 
 export async function getStaticPaths() {
   const pages = await getCollection('pages');

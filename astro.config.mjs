@@ -4,6 +4,10 @@ import sitemap from '@astrojs/sitemap';
 import tailwind from '@astrojs/tailwind';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,6 +15,14 @@ export default defineConfig({
   base: '/astro-blog',
   trailingSlash: 'ignore',
 	integrations: [mdx(), sitemap(), tailwind()],
+	vite: {
+		resolve: {
+			alias: {
+				'@theme': path.resolve(__dirname, 'themes/astro-theme-ri-nai/src'),
+				'@site.config': path.resolve(__dirname, 'src/site.config.ts'),
+			},
+		},
+	},
 	markdown: {
 		shikiConfig: {
 			themes: {

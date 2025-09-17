@@ -1,5 +1,5 @@
 import { defineCollection, z } from 'astro:content';
-import { profileConfig } from '../config';
+import { profileConfig } from '@site.config';
 
 const blog = defineCollection({
   type: 'content',
