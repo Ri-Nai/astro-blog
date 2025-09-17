@@ -12,6 +12,9 @@ tags:
   - 虚拟化
 ---
 
+import DirectLinkCards from '@theme/components/DirectLinkCards.astro';
+import DirectLinkCard from '@theme/components/DirectLinkCard.astro';
+
 ## 启用 Hyper-V
 
 Hyper-V 是 Windows 自带的虚拟化软件，可以用来创建虚拟机。（主要是懒得装 VMware）
@@ -24,7 +27,12 @@ Hyper-V 是 Windows 自带的虚拟化软件，可以用来创建虚拟机。（
 
 openGauss 官网上推荐使用 CentOS 7.6，但是 CentOS 7.6 早就不维护了。我一开始使用的时候出了很多问题（比如 yum 的镜像源设置），所以我决定向华为低头。
 
-{{< linkpage  "https://www.openeuler.org/zh/download/#openEuler%2024.03%20LTS%20SP1" "openEuler 24.03 LTS SP1" "" "https://www.openeuler.org/favicon.ico" >}}
+<DirectLinkCard
+  title="openEuler 24.03 LTS SP1"
+  description=""
+  website="https://www.openeuler.org/zh/download/#openEuler%2024.03%20LTS%20SP1"
+  image="https://www.openeuler.org/favicon.ico"
+/>
 
 ### 导入镜像
 
@@ -92,8 +100,22 @@ ssh reina@<your-ip>
 因为我习惯用 zsh，所以安装了 zsh 和 oh-my-zsh，主要是为了好看。
 
 参考文献：
-{{< linkpage "https://blog.csdn.net/qimowei/article/details/119517167" "Centos7-Linux安装zsh和oh-my-zsh(内含国内安装方法)" "" "https://g.csdnimg.cn/static/logo/favicon32.ico">}}
-{{< linkpage "https://zhuanlan.zhihu.com/p/265525597" "Oh My Zsh, 『 Powerlevel10k 安装 & 配置 』" "" "https://static.zhihu.com/heifetz/assets/apple-touch-icon-152.81060cab.png">}}
+<DirectLinkCards
+  links={[
+    {
+      title: "Centos7-Linux安装zsh和oh-my-zsh(内含国内安装方法)",
+      description: "",
+      website: "https://blog.csdn.net/qimowei/article/details/119517167",
+      image: "https://g.csdnimg.cn/static/logo/favicon32.ico"
+    },
+    {
+      title: "Oh My Zsh, 『 Powerlevel10k 安装 & 配置 』",
+      description: "",
+      website: "https://zhuanlan.zhihu.com/p/265525597",
+      image: "https://static.zhihu.com/heifetz/assets/apple-touch-icon-152.81060cab.png"
+    }
+  ]}
+/>
 
 #### zsh
 ```bash
@@ -137,7 +159,12 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 
 ## 安装 openGauss
 参考文档
-{{< linkpage "https://docs.opengauss.org/zh/docs/6.0.0/docs/InstallationGuide/%E6%9E%81%E7%AE%80%E7%89%88%E5%AE%89%E8%A3%85.html" "极简版安装文档" "" "https://docs.opengauss.org/favicon.ico" >}}
+<DirectLinkCard
+  title="极简版安装文档"
+  description=""
+  website="https://docs.opengauss.org/zh/docs/6.0.0/docs/InstallationGuide/%E6%9E%81%E7%AE%80%E7%89%88%E5%AE%89%E8%A3%85.html"
+  image="https://docs.opengauss.org/favicon.ico"
+/>
 
 ### 软件环境
 
@@ -173,7 +200,12 @@ systemctl status firewalld
 ### 安装 openGauss
 
 下载 openGauss 安装包，我安装的是极简版
-{{< linkpage "https://opengauss.org/zh/download/" "openGauss Download" "" "https://opengauss.org/favicon.ico" >}}
+<DirectLinkCard
+  title="openGauss Download"
+  description=""
+  website="https://opengauss.org/zh/download/"
+  image="https://opengauss.org/favicon.ico"
+/>
 
 ```bash
 # 下载压缩包
@@ -212,7 +244,12 @@ psql -h <your-ip> -p 5432 -U ri_nai -d postgres
 ```
 
 ## pgAdmin4 连接 openGauss
-{{< linkpage "https://www.pgadmin.org/" "pgAdmin4" "" "https://www.pgadmin.org/static/COMPILED/assets/img/favicon.ico" >}}
+<DirectLinkCard
+  title="pgAdmin4"
+  description=""
+  website="https://www.pgadmin.org/"
+  image="https://www.pgadmin.org/static/COMPILED/assets/img/favicon.ico"
+/>
 
 pgAdmin4 是一个开源的数据库管理工具，用于管理 PostgreSQL 和其他数据库。有可视化界面，可以方便的管理数据库。
 
@@ -236,7 +273,12 @@ password_encryption_type = 1 # Password storage type, 0 is md5 for PG, 1 is sha2
 具体为什么要用 `sha256 + md5` 我忘了，前两天找博客和 AI 的时候看到的。
 好像是因为 openGauss 想用 `sha256`，但是 pgAdmin4 只支持 `md5`，所以用了 `sha256 + md5`，不然会报错。
 
-{{< linkpage "https://opengauss.org/zh/blogs/gaoyunlong/openGauss%E4%B8%8Epostgresql%E6%97%A5%E5%B8%B8%E4%BD%BF%E7%94%A8%E5%B7%AE%E5%BC%82.html" "可能的参考文献" "openGauss 与 postgresql 日常使用差异" "https://opengauss.org/favicon.ico" >}}
+<DirectLinkCard
+  title="可能的参考文献"
+  description="openGauss 与 postgresql 日常使用差异"
+  website="https://opengauss.org/zh/blogs/gaoyunlong/openGauss%E4%B8%8Epostgresql%E6%97%A5%E5%B8%B8%E4%BD%BF%E7%94%A8%E5%B7%AE%E5%BC%82.html"
+  image="https://opengauss.org/favicon.ico"
+/>
 
 ```bash
 vim /opt/software/openGauss/data/single_node/pg_hba.conf
@@ -276,6 +318,11 @@ DataGrip 是 JetBrains 出品的数据库管理工具，支持多种数据库，
 
 因为自己有 JetBrains 的学生账号，所以可以免费使用 DataGrip。JB门 🙏。
 
-{{< linkpage "https://www.jetbrains.com/datagrip/" "DataGrip" "" "https://resources.jetbrains.com/storage/products/company/brand/logos/DataGrip_icon.png" >}}
+<DirectLinkCard
+  title="DataGrip"
+  description=""
+  website="https://www.jetbrains.com/datagrip/"
+  image="https://resources.jetbrains.com/storage/products/company/brand/logos/DataGrip_icon.png"
+/>
 
 然后因为上面的配置已经完成，所以直接连接就行了。
