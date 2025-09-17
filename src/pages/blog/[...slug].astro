@@ -533,20 +533,7 @@ const relatedPosts = allPosts
             </a>
           </div>
 
-          <!-- 分享按钮 -->
-          <div class="share-section">
-            <h4 class="share-title">分享这篇文章</h4>
-            <div class="share-buttons">
-              <button class="share-btn" onclick="shareToTwitter()">
-                <span class="share-icon">🐦</span>
-                Twitter
-              </button>
-              <button class="share-btn" onclick="copyLink()">
-                <span class="share-icon">🔗</span>
-                复制链接
-              </button>
-            </div>
-          </div>
+
         </footer>
       </div>
     </article>
@@ -1296,16 +1283,4 @@ const relatedPosts = allPosts
     updateActiveTOC();
   }
 
-  // 分享功能
-  function shareToTwitter() {
-    const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(document.title);
-    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
-  }
-
-  function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      alert('链接已复制到剪贴板！');
-    });
-  }
 </script>
