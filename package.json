@@ -9,7 +9,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "create-blog": "node scripts/create-blog.js"
+    "create-blog": "node scripts/create-blog.js",
+    "update-blogs": "node scripts/update-modified-blogs.js"
   },
   "keywords": [
     "astro",
