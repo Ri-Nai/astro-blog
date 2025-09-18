@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   site: 'https://ri-nai.github.io',
   base: '/astro-blog',
-  trailingSlash: 'ignore',
+  trailingSlash: 'always',
   integrations: [mdx(), sitemap(), tailwind()],
   vite: {
     resolve: {
