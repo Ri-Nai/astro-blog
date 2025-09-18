@@ -18,7 +18,7 @@ export default defineConfig({
 	vite: {
 		resolve: {
 			alias: {
-				'@theme': path.resolve(__dirname, 'themes/astro-theme-ri-nai/src'),
+				'@theme': path.resolve(__dirname, 'themes/astro-theme-kago/src'),
 				'@site.config': path.resolve(__dirname, 'src/site.config.ts'),
 			},
 		},
