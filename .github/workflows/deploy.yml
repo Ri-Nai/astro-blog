@@ -18,9 +18,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. 检出代码
+      # 1. 检出代码（包含子模块）
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       # 2. 设置 Node.js 环境
       - name: Setup Node.js
