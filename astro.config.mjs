@@ -11,47 +11,47 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://ri-nai.github.io',
+  site: 'https://ri-nai.github.io',
   base: '/astro-blog',
   trailingSlash: 'ignore',
-	integrations: [mdx(), sitemap(), tailwind()],
-	vite: {
-		resolve: {
-			alias: {
-				'@theme': path.resolve(__dirname, 'themes/astro-theme-kago/src'),
-				'@site.config': path.resolve(__dirname, 'src/site.config.ts'),
-			},
-		},
-	},
-	markdown: {
-		shikiConfig: {
-			themes: {
-				light: 'github-light',
-				dark: 'github-dark'
-			},
-			defaultColor: false,
-			wrap: true
-		},
-		remarkPlugins: [remarkMath],
-		rehypePlugins: [
-			[rehypeKatex, {
-				// 启用 MathML 输出以提供更好的可访问性
-				output: 'mathml',
-				// 保留 HTML 输出作为后备
-				trust: true,
-				// 使用更好的字体设置
-				macros: {
-					'\\RR': '\\mathbb{R}',
-					'\\NN': '\\mathbb{N}',
-					'\\ZZ': '\\mathbb{Z}',
-					'\\CC': '\\mathbb{C}',
-					'\\QQ': '\\mathbb{Q}'
-				},
-				// 启用严格模式以获得更好的渲染
-				strict: false,
-				// 启用颜色支持
-				colorIsTextColor: true
-			}]
-		]
-	}
+  integrations: [mdx(), sitemap(), tailwind()],
+  vite: {
+    resolve: {
+      alias: {
+        '@theme': path.resolve(__dirname, 'themes/astro-theme-kago/src'),
+        '@site.config': path.resolve(__dirname, 'src/site.config.ts'),
+      },
+    },
+  },
+  markdown: {
+    shikiConfig: {
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark'
+      },
+      defaultColor: false,
+      wrap: true
+    },
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [
+      [rehypeKatex, {
+        // 启用 MathML 输出以提供更好的可访问性
+        output: 'mathml',
+        // 保留 HTML 输出作为后备
+        trust: true,
+        // 使用更好的字体设置
+        macros: {
+          '\\RR': '\\mathbb{R}',
+          '\\NN': '\\mathbb{N}',
+          '\\ZZ': '\\mathbb{Z}',
+          '\\CC': '\\mathbb{C}',
+          '\\QQ': '\\mathbb{Q}'
+        },
+        // 启用严格模式以获得更好的渲染
+        strict: false,
+        // 启用颜色支持
+        colorIsTextColor: true
+      }]
+    ]
+  }
 });

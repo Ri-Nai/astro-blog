@@ -3,12 +3,19 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"],
-      "@theme/*": ["./themes/astro-theme-kago/src/*"],
-      "@site.config": ["./src/site.config.ts"]
+      "~/*": [
+        "./src/*"
+      ],
+      "@theme/*": [
+        "./themes/astro-theme-kago/src/*"
+      ],
+      "@site.config": [
+        "./src/site.config.ts"
+      ]
     }
   },
-  "include": ["src/**/*", "themes/**/*"]
+  "include": [
+    "src/**/*",
+    "themes/**/*"
+  ]
 }
-
-
