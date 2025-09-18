@@ -1,0 +1,3 @@
+[submodule "themes/astro-theme-kago"]
+	path = themes/astro-theme-kago
+	url = https://github.com/Ri-Nai/astro-theme-kago/
