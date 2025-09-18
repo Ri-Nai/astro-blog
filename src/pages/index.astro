@@ -1,6 +1,6 @@
 ---
 import HomeLayout from "@theme/layouts/HomeLayout.astro";
-import { homePageConfig } from '@site.config';
+import { homePageConfig, profileConfig } from '@site.config';
 ---
 
-<HomeLayout {...homePageConfig} />
+<HomeLayout {...homePageConfig} profileConfig={profileConfig} />

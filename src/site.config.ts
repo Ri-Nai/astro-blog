@@ -1,5 +1,5 @@
 // 博客站点配置文件
-import type { ProfileConfig, NavigationConfig, HomePageConfig } from '@theme/config';
+import type { ProfileConfig, NavigationConfig, HomePageConfig } from '@theme/site.config.d';
 
 export const profileConfig: ProfileConfig = {
   avatar: '/imgs/avatar.jpg',
