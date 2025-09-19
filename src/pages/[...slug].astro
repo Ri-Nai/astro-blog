@@ -24,6 +24,6 @@ const Layout = page.data.layout?.includes("AboutLayout")
 <Layout {...page.data}>
   <Navigation slot="navigation" />
   <div class="markdown-content">
-    <Content />
+    <slot />
   </div>
 </Layout>
