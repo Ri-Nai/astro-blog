@@ -1,5 +1,5 @@
 // 博客站点配置文件
-import type { ProfileConfig, NavigationConfig, HomePageConfig } from '@theme/site.config.d';
+import type { ProfileConfig, NavigationConfig, HomePageConfig, GiscusConfig } from '@theme/site.config.d';
 
 export const profileConfig: ProfileConfig = {
   avatar: '/imgs/avatar.jpg',
@@ -59,4 +59,18 @@ export const homePageConfig: HomePageConfig = {
     subtitle: profileConfig.bio,
     avatar: profileConfig.avatar
   },
+};
+
+export const giscusConfig: GiscusConfig = {
+  repo: "Ri-Nai/astro-blog",
+  repoId: "R_kgDOPv_k8w",
+  category: "Announcements",
+  categoryId: "DIC_kwDOPv_k884CvmvD",
+  mapping: "url",
+  strict: "0",
+  reactionsEnabled: "1",
+  emitMetadata: "0",
+  inputPosition: "bottom",
+  lang: "zh-CN",
+  enabled: true,
 };
