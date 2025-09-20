@@ -19,7 +19,7 @@ function getCurrentTimestamp() {
 // 执行git命令并返回结果
 function executeGitCommand(command) {
   try {
-    return execSync(command, { 
+    return execSync(command, {
       encoding: 'utf8',
       cwd: path.join(__dirname, '..'), // 在项目根目录执行
       env: { ...process.env, LC_ALL: 'C' } // 避免Git输出使用转义字符
@@ -34,9 +34,9 @@ function executeGitCommand(command) {
 // 检查是否在git仓库中
 function isGitRepository() {
   try {
-    execSync('git rev-parse --git-dir', { 
+    execSync('git rev-parse --git-dir', {
       cwd: path.join(__dirname, '..'),
-      stdio: 'ignore' 
+      stdio: 'ignore'
     });
     return true;
   } catch {
@@ -61,12 +61,13 @@ function getModifiedMdxFiles() {
   const mdxFiles = [];
   // 使用空字符分割，然后过滤空行
   const lines = modifiedFiles.split('\0').filter(line => line.trim());
-  
+
   for (const line of lines) {
-    // Git status格式：状态码 + 空格 + 文件路径
+    // Git status格式：状态码 + 不定数量的空格 + 文件路径
     const status = line.substring(0, 2);
-    const filePath = line.substring(3);
-    
+    // 从状态码后去除所有前导空格，得到纯净的文件路径
+    const filePath = line.substring(2).trim();
+
     // 只处理修改的文件（M），不处理新增（A）、删除（D）等
     if (status.includes('M') && (filePath.endsWith('.mdx') || filePath.endsWith('.md'))) {
       const fullPath = path.join(__dirname, '..', filePath);
@@ -87,7 +88,7 @@ function getModifiedMdxFiles() {
 function parseFrontmatter(content) {
   const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
   const match = content.match(frontmatterRegex);
-  
+
   if (!match) {
     return { frontmatter: '', body: content, hasFrontmatter: false };
   }
@@ -103,7 +104,7 @@ function parseFrontmatter(content) {
 function updateFrontmatterDate(frontmatter, newTimestamp) {
   // 匹配updatedDate字段的正则表达式
   const updatedDateRegex = /^(\s*updatedDate:\s*)(.*?)(\s*)$/m;
-  
+
   if (updatedDateRegex.test(frontmatter)) {
     // 如果存在updatedDate字段，则更新它
     return frontmatter.replace(updatedDateRegex, `$1"${newTimestamp}"$3`);
@@ -123,13 +124,13 @@ function updateFrontmatterDate(frontmatter, newTimestamp) {
 async function updateMdxFile(filePath) {
   try {
     console.log(`🔄 正在处理: ${filePath}`);
-    
+
     // 读取文件内容
     const content = await fs.readFile(filePath, 'utf8');
-    
+
     // 解析frontmatter
     const { frontmatter, body, hasFrontmatter } = parseFrontmatter(content);
-    
+
     if (!hasFrontmatter) {
       console.log(`⚠️  ${filePath} 没有frontmatter，跳过`);
       return false;
@@ -137,19 +138,19 @@ async function updateMdxFile(filePath) {
 
     // 获取当前时间戳
     const timestamp = getCurrentTimestamp();
-    
+
     // 更新frontmatter
     const updatedFrontmatter = updateFrontmatterDate(frontmatter, timestamp);
-    
+
     // 重构文件内容
     const newContent = `---\n${updatedFrontmatter}\n---\n${body}`;
-    
+
     // 写回文件
     await fs.writeFile(filePath, newContent, 'utf8');
-    
+
     console.log(`✅ 已更新 ${filePath} 的updatedDate为: ${timestamp}`);
     return true;
-    
+
   } catch (error) {
     console.error(`❌ 处理文件 ${filePath} 时出错:`, error.message);
     return false;
@@ -159,10 +160,10 @@ async function updateMdxFile(filePath) {
 // 主函数
 async function updateModifiedMdxFiles() {
   console.log('🔍 检查Git环境中修改的MDX文件...\n');
-  
+
   // 获取所有修改的MDX文件
   const modifiedFiles = getModifiedMdxFiles();
-  
+
   if (modifiedFiles.length === 0) {
     console.log('✨ 没有找到修改的MDX文件');
     return;
@@ -184,7 +185,7 @@ async function updateModifiedMdxFiles() {
   }
 
   console.log(`\n🎉 处理完成！成功更新了 ${successCount}/${modifiedFiles.length} 个文件`);
-  
+
   if (successCount > 0) {
     console.log('\n💡 提示: 文件已更新，你可能需要再次提交这些更改');
   }
