@@ -49,6 +49,7 @@ async function createBlog(title) {
 
   const dateInfo = getCurrentDate();
   const blogDir = path.join(__dirname, '..', 'src', 'content', 'blog', String(dateInfo.year), String(dateInfo.month), String(dateInfo.day), title);
+  const ImagePath = path.join(__dirname, '..', 'public', 'imgs', 'blog', String(dateInfo.year), String(dateInfo.month), String(dateInfo.day), title);
   const indexPath = path.join(blogDir, 'index.mdx');
 
   try {
@@ -81,6 +82,12 @@ async function createBlog(title) {
       console.log(`✅ 创建目录: ${blogDir}`);
     }
 
+    try {
+      await fs.access(ImagePath);
+    } catch (error) {
+      await fs.mkdir(ImagePath, { recursive: true });
+      console.log(`✅ 创建图片目录: ${ImagePath}`);
+    }
     // 生成并写入文件
     const frontmatter = generateFrontmatter(title, dateInfo);
     await fs.writeFile(indexPath, frontmatter, 'utf8');
