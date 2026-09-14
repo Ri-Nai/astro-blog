@@ -8,6 +8,7 @@ tags:
   - BFS
   - 贪心算法
 category: 生活碎片
+section: essay
 author: "日奈"
 
 hidden: true

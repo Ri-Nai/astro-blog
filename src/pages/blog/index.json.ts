@@ -1,8 +1,10 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 
 export async function GET() {
+  // 搜索索引覆盖全部未隐藏文章，两个分区（技术博客 / 个人随笔）都在内，
+  // 随笔不会因为在 /blog 列表页被过滤掉而从搜索里消失。
   const posts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => {
-    return !data.draft;
+    return !data.hidden;
   });
 
   const postsData = posts.map((post: CollectionEntry<'blog'>) => {
@@ -27,6 +29,7 @@ export async function GET() {
       url: `/blog/${post.slug}`, // 使用 slug 而不是 id
       date: dateString,
       category: post.data.category,
+      section: post.data.section, // blog = 技术博客，essay = 个人随笔
       tags: post.data.tags,
       author: post.data.author,
     };

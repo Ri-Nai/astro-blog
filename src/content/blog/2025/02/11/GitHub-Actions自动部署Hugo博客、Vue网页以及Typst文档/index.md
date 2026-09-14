@@ -5,6 +5,7 @@ pubDate: "2025-02-11T20:05:06+08:00"
 updatedDate: "2025-02-11T20:05:06+08:00"
 math: false
 category: 技术分享
+section: blog
 tags:
   - GitHub Actions
   - CI/CD

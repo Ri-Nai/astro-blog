@@ -38,7 +38,8 @@ export const navigationConfig: NavigationConfig = {
   },
   navItems: [
     { href: '/', label: '首页', icon: '🏠' },
-    { href: '/blog', label: '文章', icon: '📝' },
+    { href: '/blog', label: '技术', icon: '📝' },
+    { href: '/essays', label: '随笔', icon: '🍃' },
     { href: '/friends', label: '友链', icon: '🔗' },
     { href: '/about', label: '关于', icon: '👤' },
   ],

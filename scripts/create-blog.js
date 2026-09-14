@@ -32,6 +32,7 @@ math: false
 hidden: true
 # category:
 # tags:
+# section: blog   # blog = 技术博客，essay = 个人随笔
 ---
 
 # ${title}

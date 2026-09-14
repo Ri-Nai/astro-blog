@@ -11,6 +11,10 @@ const blog = defineCollection({
     heroImage: z.string().optional(),
     tags: z.array(z.string()).default([]),
     category: z.string().optional(),
+    // 站点分区：blog = 技术博客，essay = 个人随笔
+    // 列表页据此分流（/blog 只显示 blog，/essays 只显示 essay），
+    // 未显式声明时归入技术博客，避免历史文章凭空消失。
+    section: z.enum(['blog', 'essay']).default('blog'),
     author: z.string().default(profileConfig.author),
 
     featured: z.boolean().default(false),

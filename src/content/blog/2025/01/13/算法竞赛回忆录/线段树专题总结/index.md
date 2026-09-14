@@ -7,6 +7,7 @@ tags:
   - 数据结构
   - 线段树
 category: 生活碎片
+section: essay
 author: 日奈
 
 hidden: true

@@ -1,0 +1,21 @@
+---
+import BlogLayout from "@theme/layouts/BlogLayout.astro";
+import Navigation from "@theme/components/Navigation.astro";
+import { getSectionPosts, getPostStats } from "../../utils/postStats";
+
+// 只取 essay 分区（个人随笔）的文章，技术博客请见 /blog
+const posts = await getSectionPosts("essay");
+const { allTags, allCategories, tagCounts, categoryStats } = getPostStats(posts);
+---
+
+<BlogLayout
+  title="个人随笔 - Ri-Nai"
+  description="生活碎片与课余沉思，按标签和分类筛选"
+  posts={posts}
+  allTags={allTags}
+  allCategories={allCategories}
+  tagCounts={tagCounts}
+  categoryStats={categoryStats}
+>
+  <Navigation slot="navigation" />
+</BlogLayout>
