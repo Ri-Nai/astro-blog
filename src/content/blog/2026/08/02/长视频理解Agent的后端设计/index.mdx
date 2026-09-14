@@ -1,0 +1,284 @@
+---
+title: "长视频理解 Agent 的后端设计"
+description: "异步受理、三阶段 Agent、Checkpoint、幂等键与 SSE 进度推送——以及我在源码里发现的、文档上有但代码里没有的那些东西"
+pubDate: "2026-08-02T22:15:00+08:00"
+updatedDate: "2026-08-02T22:15:00+08:00"
+math: false
+hidden: false
+category: 技术分享
+section: blog
+tags:
+  - Go
+  - Agent
+  - 异步任务
+  - 幂等
+  - SSE
+---
+
+# 长视频理解 Agent 的后端设计
+
+用户发一个视频 ID 和一句分析目标，后端把视频转成带时间戳的证据，跑一个三阶段的 LLM 链路，最后把报告和进度推回去。定位我写在项目文档第一行：
+
+> **不是** LangChain 全托管 Agent；不是已上线大规模生产。
+> **是**：可运行的 Video Agent **执行层**工程练习（调度 / 幂等 / 恢复 / 边界）。
+
+所以这篇讲执行层：任务怎么受理、状态存哪、失败了会不会重复跑、进度怎么推。至于"分析得好不好"，那是 prompt 的事。
+
+## 形态与存储分工
+
+Go 1.22，`gin` + `sqlx` + `go-redis` + `minio-go` + `rocketmq-client-go`。**单进程**：一个 `cmd/server/main.go`，HTTP API 和 MQ 消费者同进程起来，没有独立 worker 二进制。有个顺序细节——**消费者在 HTTP 之前启动**，这样"能对外响应"和"能消费任务"是同一时刻成立的，不会出现接了单却没人消费的窗口。
+
+| 组件 | 版本 | 放什么 |
+|---|---|---|
+| MySQL | 8.0 | 4 张表：`users` / `media_files` / `agent_checkpoints` / `failed_analysis_tasks` |
+| Redis | 7.4-alpine | 幂等锁、限流计数、Checkpoint 热缓存、Pub/Sub |
+| MinIO | latest | bucket `media`，key `videos/{md5}/{filename}` |
+| RocketMQ | 5.3.2 | topic `video-analysis-topic`，生产组 `dovideo-ai-producer`，消费组 `dovideo-ai-consumer` |
+
+## 异步受理：客户端拿到的是 202
+
+`POST /analysis/ai` 只做五件事：校验视频归属 → 查缓存结果（有就直接 200）→ 算幂等键 → 限流 → 投递 MQ。**完全不等待分析完成**，立刻返回 `202 Accepted`。
+
+幂等键是两个维度的拼接：
+
+```go
+func GoalDigestMode(goal string, mode model.AnalysisMode) (string, error) {
+	goal = strings.TrimSpace(goal)
+	if goal == "" {
+		return "", fmt.Errorf("analysis goal is required")
+	}
+	if mode == "" || mode == model.ModeGeneral {
+		return sha256Hex(goal), nil
+	}
+	return sha256Hex(string(mode) + "\u241f" + goal), nil
+}
+```
+
+`contentHash` 是内容指纹，来自上传时的 MD5（边写临时文件边算：`io.MultiWriter(tmp, hash)`）；格式不匹配时 `NormalizeContentHash` 会退化成 `media-{id}`，也就是幂等性降级为"按视频去重"。`goalDigest` 是目标指纹，sha256 完整 64 位不截断，分隔符用 Unicode 单元分隔符 `U+241F` 而不是冒号——避免 goal 里本来就有冒号时产生歧义。GENERAL 模式和空 mode 算出同一个 digest，有测试断言守着。
+
+然后两把 `SETNX` 锁挡住重复投递：
+
+```go
+// 派发侧：占坑
+activeKey := taskkeys.ActiveKey(contentHash, goalDigest) // analysis:active:{hash}:{digest}
+ok, err := s.redis.SetNX(ctx, activeKey, media.ID, 6*time.Hour).Result()
+if err != nil || !ok {
+	return SubmissionDuplicate // → 409 / 业务码 40900
+}
+
+// 消费侧：执行锁
+lockKey := taskkeys.LockKey(msg.ContentHash, goalDigest) // lock:analysis:{hash}:{digest}
+ok, err := c.redis.SetNX(ctx, lockKey, "1", 30*time.Minute).Result()
+if err != nil || !ok {
+	return nil
+}
+defer c.redis.Del(ctx, lockKey)
+```
+
+一把防"重复提交"，一把防"重复消费"。
+
+### 这里我要修正一个说法
+
+我一度把这件事讲成"Redis 锁 + MySQL 状态双层防双消费"。**读回源码之后，这个说法不成立。**
+
+MySQL 那层没有防护：`media_files.content_hash` 上只有普通索引 `KEY idx_media_content_hash`，**不是 UNIQUE**；`UpdateStatus` 是无条件 UPDATE，没有"状态必须是 X 才能改成 Y"的 CAS；全仓的 `UNIQUE` 只出现在 `users.uk_users_username`。所以真实防护**只有 Redis 里的两把 SETNX**，第二层不在 MySQL。要补成双层：给 `(content_hash, goal_digest)` 加唯一索引让数据库兜底，再把状态更新改成 `UPDATE ... WHERE status = 'QUEUED'`，按 affected rows 判断是否抢到。
+
+另一个风险：**锁释放没有 owner token。** `SetNX` 写入的值是字面量 `"1"`，释放就是 `defer Del`，不校验持有者。如果任务执行超过 30 分钟，锁过期被别人抢走后，**原来那个慢任务结束时会把新持有者的锁删掉**。修法是存一个随机 token，删除前用 Lua 比对。
+
+## Agent 编排：三个阶段，两轮
+
+链路是 **Planner → Executor → Critic**，三个阶段。核心循环只有这么点：
+
+```go
+plan, err := l.planner(ctx, goal, mode)
+_ = l.checkpoint.SaveJSON(ctx, mediaID, l.checkpoint.GoalKey(goalDigest, "plan"), "PLANNER", plan)
+
+evidence := buildEvidence(vctx, goal)
+var result string
+for round := 0; round < l.maxRounds; round++ {
+	result, err = l.executor(ctx, goal, mode, plan, evidence)
+	if err != nil {
+		return "", trace, err
+	}
+	passed, feedback := l.critic(ctx, goal, result, evidence)
+	if passed {
+		break
+	}
+	evidence += "\n补充反馈:" + feedback
+}
+```
+
+**Planner 只跑一次**，在循环之外——计划不该被每一轮的失败带着跑偏。**`maxRounds` 硬编码为 2**，没从配置读；轮次耗尽时即使第二轮 Critic 仍返回 FAIL，函数照样 `return result, trace, nil`，**也就是"Critic 认为不合格"不会体现在返回值里**。**反馈靠字符串拼接传递**（`evidence += "\n补充反馈:" + feedback`），简单无状态，代价是反馈和原始证据混在一起、越滚越长，也没有结构化的"哪一轮不满意、不满意什么"。
+
+**Critic 是两段式的**：先本地正则校验，再问 LLM。
+
+```go
+if !VerifyClaims(result, evidence) {
+	return false, "部分结论缺少可核验证据"
+}
+out, err := l.llm.Chat(ctx, system, "目标:"+goal+"\n结果:"+result)
+```
+
+`VerifyClaims` 很朴素：带 `[mm:ss]` 标记的行，必须在该行里至少有一个长度 ≥3 的词出现在证据文本中；没有时间戳标记时退化成"证据非空即通过"。**它是一道廉价防线，不是形式化验证**——能挡住"编了一个视频里没出现的时间戳"，挡不住"词对上了但语义反了"。但它不花 token，所以调 LLM 前先跑一遍是划算的。
+
+### 降级链
+
+| 阶段 | 失败时的行为 |
+|---|---|
+| Planner | LLM 报错 → 给默认 3 条任务；空结果 → 给 2 条；超过 5 条 → 截断 |
+| Executor | LLM 报错 → 用 evidence 直接拼一段 markdown 返回 |
+| Critic | LLM 报错 → **默认 PASS** |
+
+Critic 失败放行的理由很实际：**它是"质检"不是"主流程"**，让质检抖动把整个任务判死，用户会看到本可成功的结果变成失败。代价是**Critic 挂掉时链路看起来完全正常**，没有任何标记能让你发现"这次其实没过质检"。要做对，应该在 trace 里把 `criticPassed` 和轮次记下来。现在只有耗时：`trace["PLANNER"] / trace["EXECUTOR"] / trace["CRITIC"]`。**只有耗时的 trace 是半成品**——它告诉你"慢"，但告诉不了"为什么慢"，也告诉不了"这次结果可不可信"。阶段名和 prompt 也全是硬编码字符串，写死在 `loop.go` 里，没有模板文件、没有版本号，想 A/B 测 prompt 这个结构撑不住。
+
+## Checkpoint：MySQL 是真源，Redis 是热缓存
+
+```sql
+CREATE TABLE IF NOT EXISTS agent_checkpoints (
+    media_id BIGINT NOT NULL,
+    checkpoint_key VARCHAR(160) NOT NULL,
+    stage VARCHAR(64) NOT NULL,
+    payload LONGTEXT NULL,
+    updated_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (media_id, checkpoint_key),
+    KEY idx_agent_checkpoint_updated (updated_at)
+) ENGINE=InnoDB ...
+```
+
+写入是"先落 MySQL，再写 Redis Hash"，读取是"Redis 优先，miss 了从 MySQL 回填并补 7 天 TTL"。主键是 `(media_id, checkpoint_key)`，所以 upsert 天然幂等：重跑同一阶段只会覆盖，不会插出第二行。
+
+**"MySQL 真源、Redis 热缓存"这个分层是整套设计里最对的一处。** 理由很硬：Redis 会丢（重启、淘汰、误 flush），而"任务恢复到哪一步"一旦丢了就得从头跑；反过来如果每次都读 MySQL，高频状态查询又会把压力全压到唯一的关系库上。所以让两者的角色彻底分开——**Redis 只允许做加速，不允许成为唯一副本**。实际写入的只有 4 个 key：
+
+| key | stage | 内容 |
+|---|---|---|
+| `goal:{digest}:plan` | `PLANNER` | Planner 输出的任务列表 |
+| `goal:{digest}:trace` | `TRACE` | 阶段耗时 map |
+| `media:context` | `VIDEO_CONTEXT` | ASR + OCR 拼出的带时间戳证据 |
+| `goal:{digest}:result` | `RESULT` | 最终报告 |
+
+### 那么"恢复"到底恢复了什么
+
+这是我最想写清楚的一段，因为我自己在文档里把它讲大了。
+
+**真正被恢复的只有 VideoContext，一个恢复点**：`ensureVideoContext` 调 `LoadContext`，成功且 `Segments` 非空就复用，否则下载视频 → ffmpeg 切片 → ASR + OCR → `SaveContext`。
+
+而 `plan` 和 `result` **从来不被消费端读取**：`internal/consumer/` 和 `internal/service/agent/` 下搜 `LoadPlan` / `LoadResult` 是零命中。`LoadPlan` 的唯一调用点是 `GET /analysis/agent-plan`（给人看的查询接口），`LoadResult` 的调用点在"状态查询"和"提交时短路返回缓存结果"两处。更彻底一点：**`Loop.Run` 里没有任何一次 checkpoint 读取，只有 `SaveJSON`**，循环体内的 Executor 草稿也完全不落盘。
+
+所以准确的描述是：**有 Checkpoint 的存储（4 个 key 都落 MySQL + Redis），但"恢复"目前只覆盖了最贵的那一步——VideoContext 的构建。** 这一步非常值得单独恢复，因为它是整条链路里最重的：ffmpeg 抽音频切成 60 秒片段 → 逐段调 ASR → 另一路 ffmpeg 按场景变化抽帧（`select='gt(scene,0.3)+not(mod(n,floor(30*30)))'`，场景切变或 30 秒保底）→ 每帧跑一次 `tesseract -l chi_sim+eng`。中间任何一次抖动或重投都会把这一整套重跑，缓存住它能把重试成本从分钟级压到毫秒级。
+
+**而"从最近成功的阶段恢复"是我写进设计、但没写进代码的东西。** 要真做，需要在循环体内每轮 Executor 之后把草稿落盘、把 Critic 的结论也落盘，然后 `Run` 开头读回这三个、从第一个缺失的阶段继续。现在缺的是后半段。
+
+顺带一个 bug 级细节：`StatusService.StageStr` 会读 `goal:{digest}:stage` 给 SSE 首帧填 stage，但**全仓没有任何地方写过这个 key**，所以首帧的 `stage` 恒为 `null`。不是逻辑错，是"读了一个从没被写过的 key"。
+
+## RocketMQ，和一个进程内的兜底
+
+`mq.NewMQ` 在**启动期**决定用哪个实现，三条降级分支：`!enabled || nameServer == ""`、生产者建失败、消费者建失败（后者会先把生产者 Close 掉）。**这是启动期选择，没有运行时故障切换**——RocketMQ 跑到一半挂了不会自动切到本地 channel。这个取舍合理：运行时热切换队列实现要处理"两个队列里都有未消费消息"，复杂度极高、收益很低。
+
+RocketMQ 侧是 Push consumer、`ConsumeFromLastOffset`、**没有 tag 过滤**、单条消息 30 分钟超时、handler 出错 `ConsumeRetryLater`；生产端同步发送 + `WithRetry(2)`。本地 channel 的兜底：
+
+```go
+ch = make(chan []byte, 128)
+
+payload := append([]byte(nil), body...)
+select {
+case ch <- payload:
+	return nil
+default:
+	return context.DeadlineExceeded
+}
+```
+
+**容量 128（两处硬编码字面量，不是常量），满了走非阻塞 `select` + `default` 立刻返回错误。** 背压策略是"直接拒绝"，不排队、不阻塞、不回退 MQ——在 HTTP 请求路径上阻塞等队列腾位置，会把"队列满"放大成"HTTP 连接耗尽"。`payload` 还做了一次深拷贝，避免调用方复用 buffer 把消息改坏。
+
+**保留两套的价值**：dev compose 只起 MySQL + Redis + MinIO，`ROCKETMQ_ENABLED=false` 时全链路照样跑通，把"能不能本地跑起来"和"要不要先装一套 MQ"解耦了。业务代码只依赖 `Producer` / `Consumer` 两个接口。
+
+### 两个必须交底的地方
+
+**第一，channel 路径的失败重投语义是断的。** channel 消费者是**单 goroutine 串行**处理，handler 出错只 `slog.Warn` 打日志，`handleFailure` 返回的 error 根本不被读取。所以"失败 → 计数 → 达到 3 次进 `failed_analysis_tasks`"这套逻辑**只在 RocketMQ 路径成立**，本地跑的时候失败任务直接就没了。这个差异很危险，因为它只在生产路径上暴露。
+
+**第二，`ChannelBus.Publish` 在 `RLock` 下写 map**，这是我写错的：
+
+```go
+// ⚠️ 已知瑕疵：RLock 下写 map；Subscribe 用 Lock 创建。
+// 竞态下不安全。改进：一律用写锁创建，或 Publish 前确保 Subscribe。
+```
+
+读锁保护写操作，并发下是未定义行为。它没炸是因为实际使用中 `Subscribe` 总在 `Publish` 之前完成——靠调用顺序侥幸成立，不是靠锁。
+
+## 限流：固定窗口，而且和网关做了相反的选择
+
+```go
+func (r *RateLimiter) Allow(ctx context.Context, key string, limit int64, window time.Duration) (bool, error) {
+	pipe := r.client.TxPipeline()
+	incr := pipe.Incr(ctx, key)
+	pipe.Expire(ctx, key, window)
+	if _, err := pipe.Exec(ctx); err != nil {
+		return false, err
+	}
+	count, err := incr.Result()
+	if err != nil {
+		return false, err
+	}
+	return count <= limit, nil
+}
+```
+
+**`INCR` + `EXPIRE`，是固定窗口，不是滑动窗口。** 阈值两套：AI 分析（`limit:ai:*`）5 次/分钟 per user、30 次/分钟全局；模式路由（`limit:route:*`）10 次/分钟 per user、60 次/分钟全局。两个维度是"与"，先查用户再查全局，**全局拒绝时已扣掉的用户配额不会归还**。固定窗口的固有问题这里也在：**边界两侧各打满 limit，短时间实际流量最高约 2×limit**；而且 `Expire` 每次调用都刷，不是"仅首次设 TTL"，行为上朝滑动窗口靠了一点，但语义仍是固定窗。
+
+**Redis 出错时的取向是 fail-closed**（`Exec` 失败直接 `return false`，调用方当拒绝），这和我在 LLM 网关里的选择**正好相反**（那边是 fail-open）。为什么不一致？因为保护对象不同：
+
+- **网关的限流保护"上游 provider 和我的账单"**，Redis 挂了就拒绝所有请求等于我自己制造一次全站故障，损失比"短暂失去限流"大 → fail-open。
+- **这个项目的限流保护"我自己的 ASR / LLM 成本"**，每个任务都是真金白银的推理开销，Redis 不可用时放开限流等于拆掉所有护栏 → fail-closed。
+
+**所以 fail-open / fail-closed 不是对错题，是"你更怕哪种损失"的题。**
+
+超限返回 `429` + 业务码 `42900`，**但没有 `Retry-After` 头**，客户端只能盲猜等多久。还有一处静默降级：**模式路由被限流时不返回 429，而是悄悄降级成 GENERAL 模式**。理由是对的（"先用通用模式出个结果"比"直接失败"友好），但它把限流信号吞掉了。
+
+## 进度推送：一条 channel 的广播
+
+Pub/Sub 只有一条 channel：`const TaskEventsChannel = "dovideo:task-events"`。**所有用户、所有任务共用这一条**，靠信封 `{mediaId, scope, event}` 过滤，`scope` 是 `"{mode}:{goal}"`，转写事件用空串。订阅端几个细节是从真实需求倒推出来的：
+
+```go
+out := make(chan model.TaskEvent, 8)
+out <- model.TaskEvent{State: initial.State, Result: initial.Result, Message: initial.Message, Stage: initStage}
+```
+
+**第一件事是先推一条当前状态**，否则客户端要等下一次状态迁移才有内容——如果连的时候任务已经在 PROCESSING，就会白屏。接着是 30 分钟流寿命上限（防止断网但 TCP 未超时的客户端把 goroutine 永远挂着），再过滤不属于自己的事件，写 `out` 用非阻塞 `select`——**慢客户端会静默丢掉中间帧**。这是有意的：丢一帧的代价是 UI 跳一下，阻塞在这里的代价是拖住整个订阅 goroutine。**终态不能丢**，所以收到 `COMPLETED` / `FAILED` 立即 `return` 并 `close(out)`。
+
+SSE 本身很朴素：`Content-Type: text/event-stream`，只写 `data:` 帧，终态后收流，断开靠 `c.Request.Context()` 被取消 → 订阅协程退出 → `cleanup()`。**三个没做的**：没有 `event:` 命名字段（前端只能自己判类型）；**没有心跳注释帧**（`: ping`），这会让某些反向代理在空闲时把头掐掉，通常配合 `X-Accel-Buffering: no`，而这个头也没设。
+
+客户端（Vue 3）**没用 `EventSource`，而是用 `fetch` + `AbortController` 手动读 body 流**，配套重连策略是指数退避、上限 15 秒（`Math.min(15_000, 1_000 * 2 ** reconnectAttempt++)`），并且 **4xx（除 408 / 429）视为终态不再重连**：
+
+```js
+return status >= 400 && status < 500 && status !== 408 && status !== 429
+```
+
+这个划分很讲究：400/401/403/404 是"你请求错了，重试一百次也没用"，408 和 429 是"等一等还能成"。**把"可重试"和"不可重试"分开，是断线重连里最容易写错也最值得写对的一处。** 代价是**单 channel 广播是 O(订阅者数) 的无效唤醒**——一千个在线任务，每条状态变更都会唤醒一千个订阅协程去过滤。要扩展该按 `mediaID` 或用户分 channel，或者换 Redis Streams 按 key 消费。
+
+## 文档里有、代码里没有的东西
+
+这一节我犹豫过要不要写。最后决定写，因为**这些差异恰好是最容易被问穿的地方**，而且它们不是"我忘了写"，而是"我先写了文档，后来把 Java 版重写成 Go，文档停在了上一版"。逐条对照源码核实过：
+
+| 文档声称 | 源码实际 |
+|---|---|
+| 「用户级与全局**滑动窗口**限制 AI 请求速率」 | `INCR` + `EXPIRE`，**固定窗口** |
+| 「ASR 与模型调用采用**指数退避重试**」 | `retry` / `backoff` 只命中 RocketMQ 的 `WithRetry(2)` 和 `ConsumeRetryLater`；ASR / LLM / Embedding 客户端**零重试零退避** |
+| 「每 5 分钟生成摘要与 Embedding，通过关键词与 **Qdrant** 语义召回 TopK」 | `QdrantURL` 只在 config 里赋值，**全仓无使用点**；`VideoChunk` 定义后无调用点；Embedding 客户端创建后立刻丢弃（`_ = embed.New(...)`） |
+| 「四种模式生成**四类结构化产物**」 | `mode` 的唯一作用是被插进 prompt 字符串，**没有按 mode 分支的代码** |
+| 「Critic 失败时重投可直接**从 Critic 继续**」 | 循环体内**没有任何 checkpoint 保存**；消费者从不读 plan |
+| 「持久化了 VideoContext、**分块、Critic 状态**」 | 实际只有 4 个 key：plan / trace / media:context / result |
+
+还有个数字要小心区分：`/agent-evaluation` 返回的 `"evidenceSupportRate": 0.85` **是源码里写死的字面量，不是实测值**，同返回里的 `"criticPassed": true` 也恒为 true。不能当评估结果引用。
+
+**为什么写出来。** 因为一个能跑的系统和一个好看的文档是两件独立的事，而后者会反过来污染前者——我在面试里被问"你的恢复是从哪个阶段继续的"时，差点照着文档答了一个不存在的机制。**文档撒谎的方式从来不是写假话，而是描述一个"本来打算做"的世界。**
+
+## 小结
+
+抛开缺口，这条链路是完整且可跑通的：
+
+```
+202 受理 → SETNX 幂等 → RocketMQ → 消费锁 → VideoContext（ASR + OCR，可复用）
+   → Planner → [Executor → Critic] × 2 → result 落库 → SSE 推终态
+```
+
+三个收获：**存储分层要按"丢了会怎样"来分**（MySQL 真源、Redis 只允许加速，这一条决定了系统面对 Redis 抖动时的行为）；**幂等键要覆盖"内容 + 意图"两个维度**（只按视频去重会让"同一视频换个目标"被误判成重复）；**背压要快不要等**。还有一个关于做项目本身的：**先写完文档再改代码，文档一定会停在旧版本上**，所以我现在会在每个机制旁边写清"这个接上了没有"。
