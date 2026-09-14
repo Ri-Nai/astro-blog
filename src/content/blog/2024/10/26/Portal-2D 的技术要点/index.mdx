@@ -1,0 +1,300 @@
+---
+title: "Portal-2D 的技术要点"
+description: "不用引擎、纯 Canvas + 原生 JS 手写 2D 平台跳跃游戏：碰撞与物理、跳跃手感、传送门、凝胶、关卡工具链、事件系统、帧管理的实现要点与取舍"
+pubDate: "2024-10-26T20:30:00+08:00"
+updatedDate: "2024-10-26T20:30:00+08:00"
+math: false
+hidden: false
+category: 技术分享
+section: blog
+tags:
+  - 游戏开发
+  - Canvas
+  - JavaScript
+  - Python
+  - 碰撞检测
+---
+
+## 项目概况
+
+大二小学期做的 2D 平台跳跃游戏，传送门机制，带剧情和 Boss 战。
+
+- 技术栈：HTML5 Canvas 2D + 原生 ES6 Class，不用游戏引擎、不用框架、不用构建工具
+- 规模：47 个 JS 文件约 4360 行，HTML 764 行，CSS 1185 行，Python 593 行
+- 团队：2 名开发 + 1 名美术。我负责物理与碰撞基类、玩家手感、传送门、凝胶、关卡编译工具链
+- 数据：关卡用 Excel 表格写，Python 工具链编译成 JSON；运行时只用 `localStorage`，没有网络请求
+- 部署：GitHub Pages
+
+## 架构
+
+主循环在 `Game.js`，一帧分两阶段：先跑所有 `computations`，再跑所有 `renderings`。这两个数组就是系统的注册表，绘制顺序显式排定，按画家算法分层：
+
+```
+map → Boss → 凝胶机 → 箱子 → 凝胶层 → 事件 → 玩家 → 传送门 → 枪
+```
+
+其余目录：
+
+```
+Managers/   Map / Event / Dialog / Achievement / Sound / Texture / Input / Data
+Entities/   Entity（物理基类）→ Player / Cube / Bullet / Gel / GLaDOS(Boss)
+Events/     Event 基类 → Button / Door / Wire / Camera / DramaEvent / Achievement
+Tiles/      Tile → Edge / Portal / GelDispenser / GelledEdgeList
+utils/      Vector / Hitbox / Keyboard / Mouse / Save / Store / Draw / FrameRate
+```
+
+## 碰撞与物理
+
+### AABB + 轴分离
+
+碰撞用轴对齐包围盒，x、y 分轴求解。返回值是压缩成 2 bit 的状态：
+
+```js
+// &1 = 撞 x，&2 = 撞 y
+```
+
+调用方按键位判断要不要停速度、要不要放音效。这个 2 bit 约定后面凝胶也会复用（见凝胶一节）。
+
+### 单位步长扫描移动
+
+不用射线检测，直接按速度逐 1 个单位步进，每步试移动、撞了就回退并做速度修正：
+
+```js
+// rigidMove：碰撞时 -v * 0.95，带衰减的反弹
+```
+
+好处是天然不会隧穿——速度上限 `MaxSpeed = 6` / 帧，两轴加起来每帧最多步进 12 次，步数有界。代价是每帧的碰撞比较次数约为 `12 × 候选面数`。
+
+浮点问题用取整规避，位移前先 `round()`：
+
+```js
+//round是因为，如果沾上浮点数判断，这辈子有了
+```
+
+### 摩擦分层
+
+地面 / 空中、玩家 / 非玩家分别走不同分支：三个 `decelerate` 系数 0.1 / 0.3 / 0.01（其中一处还乘了 `(1 + isPlayer)`），另有一处按 `Math.exp(-0.5 * deltaTime)` 做指数衰减。分开写是为了让不同状态下的手感能单独调。
+
+## 跳跃手感
+
+手感参数集中在一个 `Jumping` 类里实例化：
+
+```js
+new Jumping(baseJump = 4, maxJump = 9, gravity = 0.5,
+            coyoteTime = 8, jumpBufferTime = 15)
+```
+
+- **可变高度蓄力跳**：按住跳跃键累积 `chargeTime`，初速在 `baseJump` 和 `maxJump` 之间插值，按得越久跳越高
+- **土狼时间（8 帧）**：离开地面后仍有 8 帧可以起跳。落在速度凝胶上会重置并放大到 `1.3×`，允许 `1.5×` 跳高
+- **跳跃缓冲（15 帧）**：落地前按下的跳跃被暂存，落地瞬间自动起跳
+
+## 传送门
+
+### 数据模型
+
+每扇门有 4 个朝向 `facing`、宽度 `portalWidth`、半径 `portalRadius`。两扇门存在 `view.portals` 里，配对索引用 `i ^ 1` 取值。
+
+### 统一的穿越判定
+
+穿越逻辑写成 `Entity` 基类上的 `checkPortal(delta)`，玩家、箱子、凝胶、子弹共用这一份实现。一个方法里做了五件事：
+
+1. **入口检测**：`portals[i].isMoveIn(this.hitbox)`。两扇门没放齐（`type == -1`）直接返回 false
+2. **出口落点**：`moveOutPortalPosition(portals[i ^ 1])` 算出口位置
+3. **防卡墙**：出口落点撞到边就返回 `null`，此时直接 `break` 放弃这次传送，不把实体塞进墙里
+4. **速度旋转**：`rotateVelocity(infacing, outFacing)`，角度是 `π/2 × ((in - out + 4) mod 4)`，模长不变、方向随门朝向旋转。另外如果入射速度在门法向上的分量太小，会被补到 `MaxSpeed × 1.2`，否则玩家会被慢慢挤出门然后卡住
+5. **二次进入抑制**：传送成功后置 `this.inPortal = portalBuffer`（3 帧）。`updateXY` 里是 `if (!this.inPortal || ...) nextVelocityX = this.updateX(...)`，所以这几帧内水平输入不生效，不会刚被吐出来就又被同一扇门吸回去。例外是蓄力跳很深时（`jumpVelocity <= -4 * maxJump`）仍然让 `updateX` 生效——否则从门里被高速抛出来那一下会失去操作权
+
+返回值是一个位标记 `1 << (i ^ 1)`，和碰撞结果用同一套位运算风格。
+
+### 调用点
+
+`checkPortal` 在整个项目里只有两个调用位置：
+
+- `rigidMove` 的逐单位步进里，每走 1 个单位之前试一次
+- `isOnGround()` 里，判断脚下有没有地面之前先往下试挪 1 个单位
+
+也就是说站立不动时也会触发传送判定，不需要在移动逻辑里额外开分支。
+
+### 唯一的变体：投射物
+
+基类里有一处开关：
+
+```js
+if (!this.isBullet)
+    this.velocity = Portal.unitDirection[infacing].scale(this.velocity.magnitude());
+```
+
+`Bullet` 和 `Gel` 都会把这个开关置为 `true`，所以它实际是「投射物」的意思：穿越时保留自身弹道方向，不把速度归一到门的法向。玩家和箱子才需要归一。Boss 的弹幕穿门后能变成玩家的子弹，靠的就是这个分支。
+
+这个命名比语义窄，如果重做会改成类似 `keepsTrajectory` 的名字。
+
+### 门的放置
+
+射线是逐像素步进的，`target = SPEED × frameRatio`，`SPEED = 25`。每一步依次判断四件事，命中即结束：
+
+1. 画布边界
+2. `edges` 里 `type == 2` 的可开门面 → 定门
+3. 白色转换凝胶集合（合成一条临时 Edge，并与相邻可开门面 merge）
+4. `super_edges` 作为纯阻挡
+
+开火有 250ms 节流。判定通过后还要过两道检查：
+
+- **合法性 `Portal.valid`**：只能开在 `edge.type == 2` 上，`edgeLength >= portalLength`，且不能和另一扇门重叠（用另一扇门的 hitbox 判断新门两角是否落在里面）
+- **吸附 `Portal.fixPosition`**：三分支把门夹在边的范围内——完全在边内就不动，只有右下角在内就贴边起点，否则贴边末端
+
+这不是解析求交，是逐像素步进，代价是 `O(射程) 步 × O(边数)`。几何简单，够用。
+
+## 凝胶
+
+### 区间集合的并集与差集
+
+三种凝胶（蓝 / 橙 / 白）各自维护一个分段列表 `gelledEdges[0..2]`，每条段带朝向和长度。涂一条新凝胶时：
+
+1. 以门的尺寸贴片 `clip` 到被击中的边，得到新段
+2. 遍历三种凝胶的既有段：**同类型且重叠就 merge（并集）**；**不同类型重叠就把新旧两段都切成最多两段、只留不相交的部分（差集）**，也就是新凝胶覆盖旧凝胶
+3. 重算每段的 `length`
+
+本质是一个 1D 区间集合的 union / difference，用几何方式实现，没有上区间树。
+
+### 和物理系统的耦合
+
+`isOnGround()` 的返回值是一个压缩状态：`&1` 是实心地面，`&2` 和 `&4` 是两种速度凝胶，和碰撞结果的 2 bit 约定是同一套。`updateX` 对 `&4` 走加速 / 强减速分支。
+
+白色转换凝胶在 `PortalGun` 里被当成可开门表面（合成临时 Edge 并与相邻可开门面 merge），也就是「把不可开门的表面涂成可开门」，对应 Portal 2 的转换凝胶玩法。
+
+凝胶弹体本身复用 `Entity` 的物理，也走 `checkPortal`，所以凝胶可以穿过传送门，穿门后重新归一化方向；命中 `super_edges` 则涂抹并销毁。
+
+## 关卡工具链
+
+### 数据格式
+
+每张地图是固定一屏的 18 × 32 = 576 格网格，40 像素一格，即 1280 × 720。
+
+### 两层压缩
+
+`MapCreator.py` 读 Excel 表（坐标索引），先补 NaN 为 0，然后做两层压缩：
+
+**第一层 `fill_block()`：按行游程合并（RLE）。** 连续相同的地块合成一条条带，正数进 `blocks`，负数进背景贴图层。
+
+**第二层 `fill_edge()`：提取暴露面。** 网格向外扩一圈边界后（`B` 是 20 × 34），沿 x 和 y 各两个方向共四趟扫描（`make_edge_x(1)`、`make_edge_y(1)`、`make_edge_x(-1)`、`make_edge_y(-1)`）：
+
+```python
+if B[i][j] <= 0 or B[i + diff][j] > 0:
+    # 非暴露面，结束当前段
+else:
+    # 暴露面，按连续性和材质切段，写进 edges / super_edges
+```
+
+- `edges`：按材质类型切段，用于渲染
+- `super_edges`：不分材质，运行时碰撞用这个（`Entity.checkHits(window.$game.map.superEdges)`）
+
+渲染仍按单位块绘制，碰撞用合并后的边表，渲染保真和碰撞省算力分开。
+
+### 实测数据
+
+全量 22 张可解析地图：
+
+| 量 | 平均 | 最大 |
+|---|---|---|
+| 实心格 | 231 | 379 |
+| `blocks` 条带（RLE 后） | 63 | 158 |
+| `super_edges`（碰撞候选集） | 25（中位 24） | 48 |
+
+即每次碰撞查询的候选集从 231 个实心格降到 25 条边。
+
+**这里要说明一点：这不是复杂度层的优化。** 段数取决于暴露面的连续性——大片连续地面会合并成 1 段，所以实测值才这么低；而棋盘格地形下每格四面都暴露、互不相连，段数最坏是 `Θ(n · m)`，甚至因为四个方向各算一遍而比地块数更多。收益来自「大片实心 + 稀疏平台」的关卡几何，以及只存边界不存内部格子。
+
+### 其它区域
+
+同一份 Excel 里还有几个 sheet，用并查集做连通块、取包围盒：
+
+- `EventArea` → 事件区，BFS 算上下游方向链（`nxtdir` / `predir`）
+- `DramaArea` → 剧情区，对应事件 id
+- `SignArea` → 上层贴图，不合并，逐格输出
+- `backgroundObjects` → 背景物件，同样用并查集合并成包围盒
+
+### 产物结构
+
+编译产物只有**一份**：`assets/stages/maps/<name>.json`。内容是：
+
+```
+layers（7 层）· blocks · edges · super_edges
+· events（事件区）· drama_events（剧情区）
+```
+
+需要澄清的是 `events/` 和 `viewdatas/` 这两个目录**不是产物，是手写输入**：
+
+- `events/<name>.json` 是对话文本。`get_drama_events()` 会反过来 `json.load` 读它，把文本 update 进产物
+- `viewdatas/<name>.json` 是实体初始位置（玩家、箱子、凝胶机、门的初始状态）
+
+`RunAll.py` 遍历 `MapEditor/*.xlsx`，逐个调 `MapCreator.py` 并通过 stdin 喂文件名。
+
+### 加载方式
+
+产物是 JSONP 而不是纯 JSON：
+
+```js
+window.$game.dataManager.resolve({ ... })
+```
+
+`DataManager.loadJSON` 不用 `fetch`，而是 `document.createElement('script')` 把数据文件当脚本加载，Promise 的 resolve 被挂成全局回调。动机是 `fetch` 在 `file://` 协议下会被 CORS 拦死，`<script>` 不受限制，这样双击 `index.html` 就能玩，不需要起本地服务器。
+
+代价：数据不是严格 JSON（用严格解析器会失败，`Test.json` 就因为尾逗号挂过）、没法做流式加载和超时控制。现在会直接用 `fetch` + 本地 dev server。
+
+## 事件与剧情
+
+### 信号图
+
+每个 `GameEvent` 有 `id` 和 `affect: string[]`（下游事件 id 列表），按钮 → 电线 → 门 就是这样连起来的。
+
+`activate()` 的实现是边沿触发：
+
+```js
+activate() {
+    if (!this.activated) {
+        this.activated = true;
+        this.onActivate();
+    }
+    this.affect.forEach((id) => { ... event.activate(); });
+}
+```
+
+先判 `this.activated`，只有 `false → true` 那一次跳变才调 `onActivate()`，然后才往下游传播。如果写成电平触发，玩家站在按钮上会每帧重复触发下游，剧情会被反复播放。
+
+### 过场队列
+
+`EventManager` 用一个手写链表（`head` / `tail` / `next`）当 FIFO 队列，每帧 `handle()` 处理一个事件。事件类型有 `delay`、`dialog`、`fadeIn`、`fadeOut`、`turn`、`showImg`、`playBGM`、`deathSelect`、`gameEnd`。
+
+`handle()` 是 `async`，用 `await` 把打字机对话、淡入淡出、CG 展示串成顺序代码，主循环照旧由 `requestAnimationFrame` 驱动。过场期间 `player.blockMove = true` 锁输入。分支结局用 `DeadScreen.show()` 返回的 Promise 两个分支决定：重试就 `restart()`，否则写 `Store.set("ending", "bad")` 然后 `gameEnd()`。
+
+这套写法的问题是全局单例 `window.$game` 到处都是，而且缺少统一的取消语义——中断过场靠 `printing`、`blockMove` 这类布尔标志，没有一个地方能统一取消。
+
+## 帧与时间
+
+### 两套帧率无关写法
+
+项目里同时存在两种，语义不同：
+
+- **物理**：`deltaFrame = 60 × dt / 1000`，把真实帧折算成「60fps 下的帧数」，速度量纲不变
+- **传送门子弹**：`target = SPEED × frameRatio`，按真实时间给步数，掉帧时多走几步
+
+### 暂停时间补偿
+
+暂停时循环 `await wait(100)` 空转，恢复时把真实停顿的毫秒数加回时间戳：
+
+```js
+loop(now + pauseTime)
+```
+
+这样 `interval` 不会因为暂停而暴涨，避免恢复瞬间物理炸开或穿墙。
+
+## 已知问题
+
+- **没有空间划分**：边表和凝胶表都是线性遍历。单屏 25 条无所谓，多屏就该按区块分桶查局部
+- **全局单例**：`window.$game` 挂了一切，没有依赖注入也没有模块化。现在会拆 ES Module 加构建工具（当时是一堆 `<script>` 全局类）
+- **手感参数散落**：摩擦 0.5 / 0.3 / 0.1、衰减系数、coyote 8 帧、buffer 15 帧散在各个文件里，没有集中配置
+- **重复定义**：`Entity.js` 里 `moveOutPortalPosition` 定义了两遍，内容相同
+- **命名比语义窄**：`isBullet` 实际表示投射物（子弹和凝胶）
+- **数据非严格 JSON**：JSONP 的副作用，`Test.json` 的尾逗号会让严格解析失败
+- **暂停实现粗糙**：`while (isPaused) await wait(100)` 空转
+- **没有测试**：整个项目没有 `package.json`，没有任何断言。这是最该补的
