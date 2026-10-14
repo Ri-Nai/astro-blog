@@ -1,6 +1,7 @@
 ---
 import HomeLayout from "@theme/layouts/HomeLayout.astro";
 import { homePageConfig, profileConfig } from "@site.config";
+import { getNavPath } from "@theme/utils/pathUtils";
 import { getSectionPosts } from "../utils/postStats";
 
 // 首页的「最新文章」由 HomeLayout 直接读取整个 blog 集合，
@@ -13,7 +14,7 @@ const [techPosts, essayPosts] = await Promise.all([
 
 const sections = [
   {
-    href: "/blog",
+    href: getNavPath("/blog"),
     icon: "📝",
     name: "技术博客",
     desc: "工程实践、踩坑记录与源码阅读",
@@ -21,7 +22,7 @@ const sections = [
     latest: techPosts[0],
   },
   {
-    href: "/essays",
+    href: getNavPath("/essays"),
     icon: "🍃",
     name: "个人随笔",
     desc: "生活碎片、课余沉思与年度记录",
